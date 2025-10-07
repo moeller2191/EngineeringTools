@@ -1,0 +1,852 @@
+using System;
+using System.Collections.Generic;
+using System.Data;
+using Microsoft.Data.Sqlite;
+using System.IO;
+
+namespace XMLIndexer
+{
+    public class MrpDataManager
+    {
+        private readonly string _connectionString;
+        
+        public MrpDataManager(string databasePath)
+        {
+            _connectionString = $"Data Source={databasePath}";
+        }
+        
+        public class MrpItem
+        {
+            public int ID { get; set; }
+            public string JobNumber { get; set; } = "";
+            public string PartNumber { get; set; } = "";
+            public string        }
+        
+        /// <summary>
+        /// Get cell value from Excel worksheet
+        /// </summary>
+        private object GetCellValue(dynamic worksheet, int row, int col)
+        {
+            try
+            {
+                return worksheet.Cells[row, col].Value;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Check if a sales order has been validated in the Checked Sales Orders table
+        /// </summary>
+        public bool CheckSalesOrder(string salesOrder, string excelPath)
+        {
+            if (string.IsNullOrEmpty(salesOrder) || string.IsNullOrEmpty(excelPath) || !File.Exists(excelPath))
+                return false;
+
+            // Extract last 5 digits of sales order (matching original VBA logic)
+            string soNumber = salesOrder.Length >= 5 ? salesOrder.Substring(salesOrder.Length - 5) : salesOrder;
+
+            try
+            {
+                Type? excelType = Type.GetTypeFromProgID("Excel.Application");
+                if (excelType == null) return false;
+
+                dynamic excel = Activator.CreateInstance(excelType)!;
+                excel.Visible = false;
+                excel.DisplayAlerts = false;
+
+                dynamic workbook = excel.Workbooks.Open(excelPath);
+                
+                // Look for "Checked Sales Orders" worksheet
+                dynamic? worksheet = null;
+                for (int i = 1; i <= workbook.Worksheets.Count; i++)
+                {
+                    if (workbook.Worksheets[i].Name.Equals("Checked Sales Orders", StringComparison.OrdinalIgnoreCase))
+                    {
+                        worksheet = workbook.Worksheets[i];
+                        break;
+                    }
+                }
+
+                bool found = false;
+                if (worksheet != null)
+                {
+                    // Find SO column (assuming column B based on CSV structure)
+                    int lastRow = worksheet.UsedRange.Rows.Count;
+                    
+                    for (int row = 2; row <= lastRow; row++) // Start from row 2 (skip header)
+                    {
+                        var cellValue = GetCellValue(worksheet, row, 2)?.ToString()?.Trim(); // Column B = SO
+                        if (string.Equals(cellValue, soNumber, StringComparison.OrdinalIgnoreCase))
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+
+                workbook.Close(false);
+                excel.Quit();
+
+                // Clean up COM objects
+                if (worksheet != null)
+                    System.Runtime.InteropServices.Marshal.ReleaseComObject(worksheet);
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(workbook);
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(excel);
+
+                return found;
+            }
+            catch
+            {
+                return false; // If Excel reading fails, assume not checked
+            }
+        }
+
+        /// <summary>
+        /// Add a sales order to the Checked Sales Orders table if it doesn't already exist
+        /// </summary>
+        public bool AddSalesOrderCheck(string salesOrder, string excelPath)
+        {
+            if (string.IsNullOrEmpty(salesOrder) || string.IsNullOrEmpty(excelPath) || !File.Exists(excelPath))
+                return false;
+
+            // Extract last 5 digits of sales order (matching original VBA logic)
+            string soNumber = salesOrder.Length >= 5 ? salesOrder.Substring(salesOrder.Length - 5) : salesOrder;
+
+            // Don't add if already exists
+            if (CheckSalesOrder(salesOrder, excelPath))
+                return true;
+
+            try
+            {
+                Type? excelType = Type.GetTypeFromProgID("Excel.Application");
+                if (excelType == null) return false;
+
+                dynamic excel = Activator.CreateInstance(excelType)!;
+                excel.Visible = false;
+                excel.DisplayAlerts = false;
+
+                dynamic workbook = excel.Workbooks.Open(excelPath);
+                
+                // Look for "Checked Sales Orders" worksheet
+                dynamic? worksheet = null;
+                for (int i = 1; i <= workbook.Worksheets.Count; i++)
+                {
+                    if (workbook.Worksheets[i].Name.Equals("Checked Sales Orders", StringComparison.OrdinalIgnoreCase))
+                    {
+                        worksheet = workbook.Worksheets[i];
+                        break;
+                    }
+                }
+
+                bool success = false;
+                if (worksheet != null)
+                {
+                    // Find next available row
+                    int lastRow = worksheet.UsedRange.Rows.Count;
+                    int nextRow = lastRow + 1;
+                    
+                    // Get next ID (column A)
+                    int nextId = lastRow; // Since we start from row 2, this gives us the right ID
+                    
+                    // Add new entry
+                    worksheet.Cells[nextRow, 1].Value = nextId; // ID column
+                    worksheet.Cells[nextRow, 2].Value = soNumber; // SO column
+                    
+                    success = true;
+                }
+
+                workbook.Save();
+                workbook.Close(false);
+                excel.Quit();
+
+                // Clean up COM objects
+                if (worksheet != null)
+                    System.Runtime.InteropServices.Marshal.ReleaseComObject(worksheet);
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(workbook);
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(excel);
+
+                return success;
+            }
+            catch
+            {
+                return false; // If Excel writing fails
+            }
+        }
+
+        /// <summary>
+        /// Get list of all checked sales orders from Excel
+        /// </summary>
+        public List<string> GetCheckedSalesOrders(string excelPath)
+        {
+            var checkedOrders = new List<string>();
+            
+            if (string.IsNullOrEmpty(excelPath) || !File.Exists(excelPath))
+                return checkedOrders;
+
+            try
+            {
+                Type? excelType = Type.GetTypeFromProgID("Excel.Application");
+                if (excelType == null) return checkedOrders;
+
+                dynamic excel = Activator.CreateInstance(excelType)!;
+                excel.Visible = false;
+                excel.DisplayAlerts = false;
+
+                dynamic workbook = excel.Workbooks.Open(excelPath);
+                
+                // Look for "Checked Sales Orders" worksheet
+                dynamic? worksheet = null;
+                for (int i = 1; i <= workbook.Worksheets.Count; i++)
+                {
+                    if (workbook.Worksheets[i].Name.Equals("Checked Sales Orders", StringComparison.OrdinalIgnoreCase))
+                    {
+                        worksheet = workbook.Worksheets[i];
+                        break;
+                    }
+                }
+
+                if (worksheet != null)
+                {
+                    int lastRow = worksheet.UsedRange.Rows.Count;
+                    
+                    for (int row = 2; row <= lastRow; row++) // Start from row 2 (skip header)
+                    {
+                        var soValue = GetCellValue(worksheet, row, 2)?.ToString()?.Trim(); // Column B = SO
+                        if (!string.IsNullOrEmpty(soValue))
+                        {
+                            checkedOrders.Add(soValue);
+                        }
+                    }
+                }
+
+                workbook.Close(false);
+                excel.Quit();
+
+                // Clean up COM objects
+                if (worksheet != null)
+                    System.Runtime.InteropServices.Marshal.ReleaseComObject(worksheet);
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(workbook);
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(excel);
+            }
+            catch
+            {
+                // If Excel reading fails, return empty list
+            }
+
+            return checkedOrders;
+        }
+    }
+} set; } = "";
+            public int Quantity { get; set; } = 1;
+            public string Description { get; set; } = "";
+            public int Priority { get; set; }
+            public string DueDate { get; set; } = "";
+            public string Status { get; set; } = "";
+            public string Customer { get; set; } = "";
+            public string Program { get; set; } = "";
+            public string Notes { get; set; } = "";
+            public DateTime LastUpdated { get; set; }
+            public string XmlStatus { get; set; } = "";
+            public int HighestRelease { get; set; }
+            public int ComponentCount { get; set; }
+        }
+        
+        /// <summary>
+        /// Get MRP data for a specific job number
+        /// </summary>
+        public List<MrpItem> GetMrpDataForJob(string jobNumber)
+        {
+            var items = new List<MrpItem>();
+            
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            
+            using var command = new SqliteCommand(@"
+                SELECT * FROM vw_MrpWithXmlStatus 
+                WHERE JobNumber LIKE @jobNumber
+                ORDER BY Priority, PartNumber", connection);
+            
+            command.Parameters.AddWithValue("@jobNumber", $"%{jobNumber}%");
+            
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                items.Add(new MrpItem
+                {
+                    ID = reader.GetInt32("ID"),
+                    JobNumber = reader.GetString("JobNumber"),
+                    PartNumber = reader.IsDBNull("PartNumber") ? "" : reader.GetString("PartNumber"),
+                    Revision = reader.IsDBNull("Revision") ? "" : reader.GetString("Revision"),
+                    Quantity = reader.GetInt32("Quantity"),
+                    Description = reader.IsDBNull("Description") ? "" : reader.GetString("Description"),
+                    Priority = reader.GetInt32("Priority"),
+                    DueDate = reader.IsDBNull("DueDate") ? "" : reader.GetString("DueDate"),
+                    Status = reader.IsDBNull("Status") ? "" : reader.GetString("Status"),
+                    Customer = reader.IsDBNull("Customer") ? "" : reader.GetString("Customer"),
+                    Program = reader.IsDBNull("Program") ? "" : reader.GetString("Program"),
+                    Notes = reader.IsDBNull("Notes") ? "" : reader.GetString("Notes"),
+                    LastUpdated = reader.GetDateTime("LastUpdated"),
+                    XmlStatus = reader.IsDBNull("XmlStatus") ? "Not Found" : reader.GetString("XmlStatus"),
+                    HighestRelease = reader.GetInt32("HighestRelease"),
+                    ComponentCount = reader.GetInt32("ComponentCount")
+                });
+            }
+            
+            return items;
+        }
+        
+        /// <summary>
+        /// Get all active MRP jobs
+        /// </summary>
+        public List<MrpItem> GetActiveMrpJobs()
+        {
+            var items = new List<MrpItem>();
+            
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            
+            using var command = new SqliteCommand(@"
+                SELECT * FROM vw_MrpWithXmlStatus 
+                WHERE Status = 'Active'
+                ORDER BY Priority, JobNumber", connection);
+            
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                items.Add(new MrpItem
+                {
+                    ID = reader.GetInt32("ID"),
+                    JobNumber = reader.GetString("JobNumber"),
+                    PartNumber = reader.IsDBNull("PartNumber") ? "" : reader.GetString("PartNumber"),
+                    Revision = reader.IsDBNull("Revision") ? "" : reader.GetString("Revision"),
+                    Quantity = reader.GetInt32("Quantity"),
+                    Description = reader.IsDBNull("Description") ? "" : reader.GetString("Description"),
+                    Priority = reader.GetInt32("Priority"),
+                    DueDate = reader.IsDBNull("DueDate") ? "" : reader.GetString("DueDate"),
+                    Status = reader.IsDBNull("Status") ? "" : reader.GetString("Status"),
+                    Customer = reader.IsDBNull("Customer") ? "" : reader.GetString("Customer"),
+                    Program = reader.IsDBNull("Program") ? "" : reader.GetString("Program"),
+                    Notes = reader.IsDBNull("Notes") ? "" : reader.GetString("Notes"),
+                    LastUpdated = reader.GetDateTime("LastUpdated"),
+                    XmlStatus = reader.IsDBNull("XmlStatus") ? "Not Found" : reader.GetString("XmlStatus"),
+                    HighestRelease = reader.GetInt32("HighestRelease"),
+                    ComponentCount = reader.GetInt32("ComponentCount")
+                });
+            }
+            
+            return items;
+        }
+        
+        /// <summary>
+        /// Update MRP data from external source (e.g., Excel file)
+        /// </summary>
+        public void UpdateMrpData(List<MrpItem> newData)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            
+            using var transaction = connection.BeginTransaction();
+            
+            try
+            {
+                // Clear existing data (or implement upsert logic)
+                using var deleteCommand = new SqliteCommand(
+                    "DELETE FROM MrpPriorityList WHERE LastUpdated < datetime('now', '-1 day')", 
+                    connection, transaction);
+                deleteCommand.ExecuteNonQuery();
+                
+                // Insert new data
+                foreach (var item in newData)
+                {
+                    using var insertCommand = new SqliteCommand(@"
+                        INSERT OR REPLACE INTO MrpPriorityList 
+                        (JobNumber, PartNumber, Revision, Quantity, Description, Priority, DueDate, Status, Customer, Program, Notes, LastUpdated)
+                        VALUES (@jobNumber, @partNumber, @revision, @quantity, @description, @priority, @dueDate, @status, @customer, @program, @notes, datetime('now'))",
+                        connection, transaction);
+                    
+                    insertCommand.Parameters.AddWithValue("@jobNumber", item.JobNumber);
+                    insertCommand.Parameters.AddWithValue("@partNumber", item.PartNumber);
+                    insertCommand.Parameters.AddWithValue("@revision", item.Revision);
+                    insertCommand.Parameters.AddWithValue("@quantity", item.Quantity);
+                    insertCommand.Parameters.AddWithValue("@description", item.Description);
+                    insertCommand.Parameters.AddWithValue("@priority", item.Priority);
+                    insertCommand.Parameters.AddWithValue("@dueDate", item.DueDate);
+                    insertCommand.Parameters.AddWithValue("@status", item.Status);
+                    insertCommand.Parameters.AddWithValue("@customer", item.Customer);
+                    insertCommand.Parameters.AddWithValue("@program", item.Program);
+                    insertCommand.Parameters.AddWithValue("@notes", item.Notes);
+                    
+                    insertCommand.ExecuteNonQuery();
+                }
+                
+                transaction.Commit();
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+        }
+        
+        /// <summary>
+        /// Get jobs that are ready for burning (have XML files assigned in Excel OR are I-jobs that can auto-assign)
+        /// </summary>
+        public List<MrpItem> GetJobsReadyForBurning(string excelPath)
+        {
+            var items = new List<MrpItem>();
+            
+            if (string.IsNullOrEmpty(excelPath) || !File.Exists(excelPath))
+            {
+                return items; // Return empty list if no Excel file
+            }
+            
+            try
+            {
+                // Read existing job/XML assignments from Excel
+                var jobXmlAssignments = ReadJobXmlAssignmentsFromExcel(excelPath);
+                
+                // Get MRP data for all active jobs
+                using var connection = new SqliteConnection(_connectionString);
+                connection.Open();
+                
+                using var command = new SqliteCommand(@"
+                    SELECT m.* 
+                    FROM vw_MrpWithXmlStatus m
+                    WHERE m.XmlStatus = 'Found' 
+                    AND m.Status = 'Active'
+                    ORDER BY m.Priority, m.DueDate", connection);
+                
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    var jobNumber = reader.GetString("JobNumber");
+                    var partNumber = reader.IsDBNull("PartNumber") ? "" : reader.GetString("PartNumber");
+                    var revision = reader.IsDBNull("Revision") ? "" : reader.GetString("Revision");
+                    
+                    bool isIJob = jobNumber.StartsWith("I", StringComparison.OrdinalIgnoreCase);
+                    bool hasExcelAssignment = jobXmlAssignments.ContainsKey(jobNumber);
+                    
+                    // Include job if:
+                    // 1. Has Excel assignment (regular workflow), OR
+                    // 2. Is an I-job with XML available (auto-assign workflow)
+                    if (hasExcelAssignment || (isIJob && !string.IsNullOrEmpty(partNumber)))
+                    {
+                        var item = new MrpItem
+                        {
+                            ID = reader.GetInt32("ID"),
+                            JobNumber = jobNumber,
+                            PartNumber = partNumber,
+                            Revision = revision,
+                            Quantity = reader.GetInt32("Quantity"),
+                            Description = reader.IsDBNull("Description") ? "" : reader.GetString("Description"),
+                            Priority = reader.GetInt32("Priority"),
+                            DueDate = reader.IsDBNull("DueDate") ? "" : reader.GetString("DueDate"),
+                            Status = reader.IsDBNull("Status") ? "" : reader.GetString("Status"),
+                            Customer = reader.IsDBNull("Customer") ? "" : reader.GetString("Customer"),
+                            Program = reader.IsDBNull("Program") ? "" : reader.GetString("Program"),
+                            Notes = reader.IsDBNull("Notes") ? "" : reader.GetString("Notes"),
+                            LastUpdated = reader.GetDateTime("LastUpdated"),
+                            XmlStatus = reader.IsDBNull("XmlStatus") ? "Not Found" : reader.GetString("XmlStatus"),
+                            HighestRelease = reader.GetInt32("HighestRelease"),
+                            ComponentCount = reader.GetInt32("ComponentCount")
+                        };
+                        
+                        items.Add(item);
+                    }
+                }
+            }
+            catch
+            {
+                // If Excel reading fails, return empty list
+                return new List<MrpItem>();
+            }
+            
+            return items;
+        }
+        
+        /// <summary>
+        /// Read job/XML assignments from Excel file
+        /// </summary>
+        private Dictionary<string, string> ReadJobXmlAssignmentsFromExcel(string excelPath)
+        {
+            var assignments = new Dictionary<string, string>();
+            
+            try
+            {
+                Type? excelType = Type.GetTypeFromProgID("Excel.Application");
+                if (excelType == null) return assignments;
+                
+                dynamic excel = Activator.CreateInstance(excelType)!;
+                excel.Visible = false;
+                excel.DisplayAlerts = false;
+                
+                dynamic workbook = excel.Workbooks.Open(excelPath);
+                dynamic worksheet = workbook.Worksheets[1];
+                
+                // Find JobNumber and XMLFile columns
+                int headerRow = 1;
+                int jobNumberCol = -1;
+                int xmlFileCol = -1;
+                int lastCol = worksheet.UsedRange.Columns.Count;
+                
+                for (int col = 1; col <= lastCol; col++)
+                {
+                    var headerValue = GetCellValue(worksheet, headerRow, col)?.ToString()?.Trim();
+                    if (string.Equals(headerValue, "JobNumber", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(headerValue, "Job Number", StringComparison.OrdinalIgnoreCase))
+                    {
+                        jobNumberCol = col;
+                    }
+                    else if (string.Equals(headerValue, "XMLFile", StringComparison.OrdinalIgnoreCase) ||
+                             string.Equals(headerValue, "XML File", StringComparison.OrdinalIgnoreCase))
+                    {
+                        xmlFileCol = col;
+                    }
+                }
+                
+                // Read job/XML assignments
+                if (jobNumberCol > 0 && xmlFileCol > 0)
+                {
+                    int lastRow = worksheet.UsedRange.Rows.Count;
+                    
+                    for (int row = headerRow + 1; row <= lastRow; row++)
+                    {
+                        var jobNumber = GetCellValue(worksheet, row, jobNumberCol)?.ToString()?.Trim();
+                        var xmlFile = GetCellValue(worksheet, row, xmlFileCol)?.ToString()?.Trim();
+                        
+                        if (!string.IsNullOrEmpty(jobNumber) && !string.IsNullOrEmpty(xmlFile))
+                        {
+                            assignments[jobNumber] = xmlFile;
+                        }
+                    }
+                }
+                
+                workbook.Close(false);
+                excel.Quit();
+                
+                // Clean up COM objects
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(worksheet);
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(workbook);
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(excel);
+            }
+            catch
+            {
+                // If Excel reading fails, return empty dictionary
+            }
+            
+            return assignments;
+        }
+        
+        /// <summary>
+        /// Get XML file path for a job number from Excel, with auto-assignment for I-jobs
+        /// </summary>
+        public string GetXmlFilePathForJob(string jobNumber, string excelPath)
+        {
+            if (string.IsNullOrEmpty(excelPath) || !File.Exists(excelPath))
+                return "";
+                
+            // First check if there's already an assignment in Excel
+            var assignments = ReadJobXmlAssignmentsFromExcel(excelPath);
+            if (assignments.ContainsKey(jobNumber))
+            {
+                return assignments[jobNumber];
+            }
+            
+            // For I-jobs, auto-assign highest release XML and save to Excel
+            if (jobNumber.StartsWith("I", StringComparison.OrdinalIgnoreCase))
+            {
+                string autoXmlFile = GetHighestReleaseXmlForJob(jobNumber);
+                if (!string.IsNullOrEmpty(autoXmlFile))
+                {
+                    // Save the auto-assignment back to Excel for future reference
+                    var newAssignments = new Dictionary<string, string> { { jobNumber, autoXmlFile } };
+                    UpdateExcelWithJobXmlAssignments(excelPath, newAssignments);
+                    return autoXmlFile;
+                }
+            }
+            
+            return "";
+        }
+        
+        /// <summary>
+        /// Get highest release XML file for a job by matching part number and revision
+        /// </summary>
+        private string GetHighestReleaseXmlForJob(string jobNumber)
+        {
+            try
+            {
+                // Get MRP data for this job to find part number and revision
+                using var connection = new SqliteConnection(_connectionString);
+                connection.Open();
+                
+                using var jobCommand = new SqliteCommand(@"
+                    SELECT PartNumber, Revision 
+                    FROM vw_MrpWithXmlStatus 
+                    WHERE JobNumber = @jobNumber 
+                    LIMIT 1", connection);
+                
+                jobCommand.Parameters.AddWithValue("@jobNumber", jobNumber);
+                
+                using var jobReader = jobCommand.ExecuteReader();
+                if (jobReader.Read())
+                {
+                    string partNumber = jobReader.IsDBNull("PartNumber") ? "" : jobReader.GetString("PartNumber");
+                    string revision = jobReader.IsDBNull("Revision") ? "" : jobReader.GetString("Revision");
+                    
+                    if (!string.IsNullOrEmpty(partNumber))
+                    {
+                        jobReader.Close();
+                        
+                        // Find highest release XML for this part number and revision
+                        using var xmlCommand = new SqliteCommand(@"
+                            SELECT FileName 
+                            FROM XMLIndex 
+                            WHERE PartNumber = @partNumber 
+                            AND (Revision = @revision OR Revision = '' OR Revision IS NULL)
+                            ORDER BY Release DESC 
+                            LIMIT 1", connection);
+                        
+                        xmlCommand.Parameters.AddWithValue("@partNumber", partNumber);
+                        xmlCommand.Parameters.AddWithValue("@revision", revision);
+                        
+                        var result = xmlCommand.ExecuteScalar();
+                        return result?.ToString() ?? "";
+                    }
+                }
+            }
+            catch
+            {
+                // If lookup fails, return empty string
+            }
+            
+            return "";
+        }
+        
+        /// <summary>
+        /// Check if engineering is completed for a job (has XML file assigned in Excel OR is I-job with available XML)
+        /// </summary>
+        public bool IsEngineeringCompleted(string jobNumber, string excelPath)
+        {
+            return !string.IsNullOrEmpty(GetXmlFilePathForJob(jobNumber, excelPath));
+        }
+
+        /// <summary>
+        /// Import MRP data from Excel file (placeholder - would need Excel reading library)
+        /// </summary>
+        public void ImportFromExcelFile(string filePath)
+        {
+            // TODO: Implement Excel reading using ClosedXML or similar
+            // For now, this is a placeholder that shows the structure
+            
+            if (!File.Exists(filePath))
+            {
+                throw new FileNotFoundException($"Excel file not found: {filePath}");
+            }
+            
+            // This would read the Excel file and convert to MrpItem list
+            // Then call UpdateMrpData(items)
+            
+            Console.WriteLine($"Excel import from {filePath} - Implementation needed");
+        }
+        
+        /// <summary>
+        /// Import MRP data from Excel file
+        /// </summary>
+        public bool ImportFromExcel(string excelPath)
+        {
+            try
+            {
+                var newMrpItems = ReadExcelData(excelPath);
+                if (newMrpItems.Count > 0)
+                {
+                    UpdateMrpData(newMrpItems);
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Excel import failed: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Read MRP data from Excel file
+        /// </summary>
+        private List<MrpItem> ReadExcelData(string excelPath)
+        {
+            var items = new List<MrpItem>();
+            
+            try
+            {
+                // Use COM interop to read Excel file
+                dynamic excel = Activator.CreateInstance(Type.GetTypeFromProgID("Excel.Application"));
+                excel.Visible = false;
+                excel.DisplayAlerts = false;
+                
+                var workbook = excel.Workbooks.Open(excelPath);
+                var worksheet = workbook.Worksheets[1]; // First worksheet
+                
+                var usedRange = worksheet.UsedRange;
+                int rowCount = usedRange.Rows.Count;
+                int colCount = usedRange.Columns.Count;
+                
+                // Assume first row contains headers, start from row 2
+                for (int row = 2; row <= rowCount; row++)
+                {
+                    try
+                    {
+                        // Read data from Excel columns (adjust column indices based on your Excel structure)
+                        var jobNumber = GetCellValue(worksheet, row, 1)?.ToString()?.Trim(); // Column A
+                        var partNumber = GetCellValue(worksheet, row, 2)?.ToString()?.Trim(); // Column B
+                        var revision = GetCellValue(worksheet, row, 3)?.ToString()?.Trim(); // Column C
+                        var quantityStr = GetCellValue(worksheet, row, 4)?.ToString()?.Trim(); // Column D
+                        var description = GetCellValue(worksheet, row, 5)?.ToString()?.Trim(); // Column E
+                        var priorityStr = GetCellValue(worksheet, row, 6)?.ToString()?.Trim(); // Column F
+                        var status = GetCellValue(worksheet, row, 7)?.ToString()?.Trim(); // Column G
+                        
+                        if (!string.IsNullOrEmpty(jobNumber) && !string.IsNullOrEmpty(partNumber))
+                        {
+                            var item = new MrpItem
+                            {
+                                JobNumber = jobNumber,
+                                PartNumber = partNumber,
+                                Revision = revision ?? "",
+                                Quantity = int.TryParse(quantityStr, out int qty) ? qty : 1,
+                                Description = description ?? "",
+                                Priority = int.TryParse(priorityStr, out int pri) ? pri : 1,
+                                Status = !string.IsNullOrEmpty(status) ? status : "Active"
+                            };
+                            
+                            items.Add(item);
+                        }
+                    }
+                    catch
+                    {
+                        // Skip invalid rows
+                        continue;
+                    }
+                }
+                
+                workbook.Close(false);
+                excel.Quit();
+                
+                // Clean up COM objects
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(worksheet);
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(workbook);
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(excel);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to read Excel file: {ex.Message}");
+            }
+            
+            return items;
+        }
+        
+        /// <summary>
+        /// Update Excel file with job/XML assignments
+        /// </summary>
+        public bool UpdateExcelWithJobXmlAssignments(string excelPath, Dictionary<string, string> jobXmlAssignments)
+        {
+            try
+            {
+                Type? excelType = Type.GetTypeFromProgID("Excel.Application");
+                if (excelType == null) throw new Exception("Excel not available");
+                
+                dynamic excel = Activator.CreateInstance(excelType)!;
+                excel.Visible = false;
+                excel.DisplayAlerts = false;
+                
+                dynamic workbook = excel.Workbooks.Open(excelPath);
+                dynamic worksheet = workbook.Worksheets[1]; // First worksheet
+                
+                // Find the header row and locate JobNumber and XMLFile columns
+                int headerRow = 1;
+                int jobNumberCol = -1;
+                int xmlFileCol = -1;
+                int lastCol = worksheet.UsedRange.Columns.Count;
+                
+                // Look for existing headers
+                for (int col = 1; col <= lastCol; col++)
+                {
+                    var headerValue = GetCellValue(worksheet, headerRow, col)?.ToString()?.Trim();
+                    if (string.Equals(headerValue, "JobNumber", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(headerValue, "Job Number", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(headerValue, "Job_Number", StringComparison.OrdinalIgnoreCase))
+                    {
+                        jobNumberCol = col;
+                    }
+                    else if (string.Equals(headerValue, "XMLFile", StringComparison.OrdinalIgnoreCase) ||
+                             string.Equals(headerValue, "XML File", StringComparison.OrdinalIgnoreCase) ||
+                             string.Equals(headerValue, "XML_File", StringComparison.OrdinalIgnoreCase) ||
+                             string.Equals(headerValue, "XMLFileName", StringComparison.OrdinalIgnoreCase))
+                    {
+                        xmlFileCol = col;
+                    }
+                }
+                
+                // If XMLFile column doesn't exist, create it
+                if (xmlFileCol == -1)
+                {
+                    xmlFileCol = lastCol + 1;
+                    worksheet.Cells[headerRow, xmlFileCol].Value = "XMLFile";
+                }
+                
+                if (jobNumberCol == -1)
+                {
+                    throw new Exception("JobNumber column not found in Excel file");
+                }
+                
+                // Update rows with job/XML assignments
+                int lastRow = worksheet.UsedRange.Rows.Count;
+                int updatedCount = 0;
+                
+                for (int row = headerRow + 1; row <= lastRow; row++)
+                {
+                    var jobNumber = GetCellValue(worksheet, row, jobNumberCol)?.ToString()?.Trim();
+                    
+                    if (!string.IsNullOrEmpty(jobNumber) && jobXmlAssignments.ContainsKey(jobNumber))
+                    {
+                        worksheet.Cells[row, xmlFileCol].Value = jobXmlAssignments[jobNumber];
+                        updatedCount++;
+                    }
+                }
+                
+                // Save the workbook
+                workbook.Save();
+                workbook.Close(false);
+                excel.Quit();
+                
+                // Clean up COM objects
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(worksheet);
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(workbook);
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(excel);
+                
+                return updatedCount > 0;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to update Excel file: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Get cell value from Excel worksheet
+        /// </summary>
+        private object GetCellValue(dynamic worksheet, int row, int col)
+        {
+            try
+            {
+                return worksheet.Cells[row, col].Value;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+    }
+}

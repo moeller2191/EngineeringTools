@@ -1,0 +1,268 @@
+
+=== CUTLIST DEBUG FOR I-JOB === 10/7/2025 8:29:48 AM
+Job: IK3QR-0000
+Part: SULL-U-250030-983
+Revision: '03'
+Search PartNumber: '%SULL-U-250030-983%'
+Search Revision: '03%'
+================================
+Executing query with parameters:
+  @partNumber = '%SULL-U-250030-983%'
+  @revisionLike = '03%'
+Adding component: L151854.SLDPRT - DDR32 Ind Actator Tab
+Found 1 components for I-job cutlist
+Total CutlistData count: 1
+=== END CUTLIST DEBUG ===
+
+=== CUTLIST DEBUG FOR I-JOB === 10/7/2025 8:31:57 AM
+Job: IK3NC-0000
+Part: SULL-U-02250162-711
+Revision: '02'
+Search PartNumber: '%SULL-U-02250162-711%'
+Search Revision: '02%'
+================================
+Executing query with parameters:
+  @partNumber = '%SULL-U-02250162-711%'
+  @revisionLike = '02%'
+Adding component: L146187.psm - IND, ACTUATOR DDR32 SPCL
+Found 1 components for I-job cutlist
+Total CutlistData count: 1
+=== END CUTLIST DEBUG ===
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 8:39:25 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\Priority List Master SHOP-SQL.xls
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 0
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+
+=== CONSTRUCTOR START === 10/7/2025 8:43:25 AM
+Collections initialized
+UI Elements found - CutlistGrid: True, ExcelStatus: True, CheckedCount: True
+CutlistDataGrid bound to CutlistData
+Test item added - Collection count: 1
+Excel status updated to Connected
+Calling UpdateProgramStatus from constructor
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 8:43:25 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\Priority List Master SHOP-SQL.xls
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 0
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+=== CONSTRUCTOR END ===
+
+=== CUTLIST DEBUG FOR I-JOB === 10/7/2025 8:44:22 AM
+Job: IK3II-0000
+Part: EA039328-001-LWR PNLS
+Revision: '0C'
+Search PartNumber: '%EA039328-001-LWR PNLS%'
+Search Revision: '0C%'
+================================
+Executing query with parameters:
+  @partNumber = '%EA039328-001-LWR PNLS%'
+  @revisionLike = '0C%'
+Adding component: L149448.SLDPRT - SIDE COVER INSULATION PANEL
+Adding component: L149449.SLDPRT - FRONT/REAR COVER INSULATION PANEL
+Adding component: L149459.SLDPRT - LOWER SECTION SIDE COVER
+Adding component: L149460.SLDPRT - LOWER FRONT/REAR COVER
+Adding component: LOWER SECTION FRONT-REAR COVER.SLDASM - LOWER SECTION FRONT-REAR COVER
+Adding component: LOWER SECTION SIDE COVER.SLDASM - LOWER SECTION SIDE COVER
+Found 6 components for I-job cutlist
+Total CutlistData count: 6
+=== END CUTLIST DEBUG ===
+
+=== SALES ORDER STATUS UPDATE === 10/7/2025 8:45:27 AM
+Checking Excel file: C:\Scripts\EngineeringTools\Priority List Master SHOP-SQL.xls
+File exists: True
+Successfully set status to Connected
+Checked orders count: 0
+=== END SALES ORDER STATUS UPDATE ===
+
+=== SALES ORDER STATUS UPDATE === 10/7/2025 8:45:54 AM
+Checking Excel file: C:\Scripts\EngineeringTools\Priority List Master SHOP-SQL.xls
+File exists: True
+Successfully set status to Connected
+Checked orders count: 0
+=== END SALES ORDER STATUS UPDATE ===
+
+=== CUTLIST DEBUG FOR I-JOB === 10/7/2025 8:46:21 AM
+Job: IK3IF-0000
+Part: EA039328-001-CART
+Revision: '0C'
+Search PartNumber: '%EA039328-001-CART%'
+Search Revision: '0C%'
+================================
+Executing query with parameters:
+  @partNumber = '%EA039328-001-CART%'
+  @revisionLike = '0C%'
+Adding component: 3.0x1.5x0.25 - 95.3A.SLDPRT - 3 X 1.5 X 0.25 TUBING
+Adding component: 3.0x1.5x0.25 - 95.3B.SLDPRT - 3 X 1.5 X 0.25 TUBING
+Adding component: 3.0x2.0x0.25 - 16.25.SLDPRT - 3X2X.250(1/4WALL)REC.TUBING(7.110#)
+Adding component: 8x2x0.25 - 29_Holes.SLDPRT - 2 X 8 X 0.25 RECT TUBING
+Adding component: 8x2x0.25 - 29_No Holes.SLDPRT - 2 X 8 X 0.25 RECT TUBING
+Adding component: CASTER.SLDASM - CASTER
+Adding component: L149438.SLDPRT - CART RIGHT END
+Adding component: L149439.SLDPRT - CART LEFT END
+Adding component: L149440.SLDPRT - DRAWBAR GUSSET
+Adding component: NewL1.SLDPRT - 3 X 2 X .25 ANGLE (4.1  FT) - 29.0
+Adding component: NewL2.SLDPRT - 3 X 2 X .25 ANGLE (4.1  FT) - 13.0
+Found 11 components for I-job cutlist
+Total CutlistData count: 11
+=== END CUTLIST DEBUG ===
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 8:46:52 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\Priority List Master SHOP-SQL.xls
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 0
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 8:48:11 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\Priority List Master SHOP-SQL.xls
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 0
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 8:49:13 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\Priority List Master SHOP-SQL.xls
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 0
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+
+=== CONSTRUCTOR START === 10/7/2025 8:51:19 AM
+Collections initialized
+UI Elements found - CutlistGrid: True, ExcelStatus: True, CheckedCount: True
+CutlistDataGrid bound to CutlistData
+Test item added - Collection count: 1
+Excel status updated to Connected
+Calling UpdateProgramStatus from constructor
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 8:51:19 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\Priority List Master SHOP-SQL.xls
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 0
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+=== CONSTRUCTOR END ===
+
+=== CUTLIST DEBUG FOR I-JOB === 10/7/2025 8:51:28 AM
+Job: IK3IF-0000
+Part: EA039328-001-CART
+Revision: '0C'
+Search PartNumber: '%EA039328-001-CART%'
+Search Revision: '0C%'
+================================
+Executing query with parameters:
+  @partNumber = '%EA039328-001-CART%'
+  @revisionLike = '0C%'
+Adding component: 3.0x1.5x0.25 - 95.3A - 3 X 1.5 X 0.25 TUBING
+Adding component: 3.0x1.5x0.25 - 95.3B - 3 X 1.5 X 0.25 TUBING
+Adding component: 3.0x2.0x0.25 - 16.25 - 3X2X.250(1/4WALL)REC.TUBING(7.110#)
+Adding component: 8x2x0.25 - 29_Holes - 2 X 8 X 0.25 RECT TUBING
+Adding component: 8x2x0.25 - 29_No Holes - 2 X 8 X 0.25 RECT TUBING
+Adding component: L149438 - CART RIGHT END
+Adding component: L149439 - CART LEFT END
+Adding component: L149440 - DRAWBAR GUSSET
+Adding component: NewL1 - 3 X 2 X .25 ANGLE (4.1  FT) - 29.0
+Adding component: NewL2 - 3 X 2 X .25 ANGLE (4.1  FT) - 13.0
+Found 10 components for I-job cutlist
+Total CutlistData count: 10
+=== END CUTLIST DEBUG ===
+
+=== CUTLIST DEBUG FOR I-JOB === 10/7/2025 8:51:40 AM
+Job: IK2TX-0000
+Part: SRC-02250175-445
+Revision: '03'
+Search PartNumber: '%SRC-02250175-445%'
+Search Revision: '03%'
+================================
+Executing query with parameters:
+  @partNumber = '%SRC-02250175-445%'
+  @revisionLike = '03%'
+Found 0 components for I-job cutlist
+Total CutlistData count: 0
+=== END CUTLIST DEBUG ===
+
+=== SALES ORDER STATUS UPDATE === 10/7/2025 8:52:06 AM
+Checking Excel file: C:\Scripts\EngineeringTools\Priority List Master SHOP-SQL.xls
+File exists: True
+Successfully set status to Connected
+Checked orders count: 0
+=== END SALES ORDER STATUS UPDATE ===
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 8:52:51 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\Priority List Master SHOP-SQL.xls
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 0
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 8:53:30 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\Priority List Master SHOP-SQL.xls
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 0
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+
+=== CONSTRUCTOR START === 10/7/2025 9:05:40 AM
+Collections initialized
+UI Elements found - CutlistGrid: True, ExcelStatus: True, CheckedCount: True
+CutlistDataGrid bound to CutlistData
+Test item added - Collection count: 1
+Excel status updated to Connected
+Calling UpdateProgramStatus from constructor
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 9:05:40 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\Priority List Master SHOP-SQL.xls
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 0
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+=== CONSTRUCTOR END ===
+
+=== SALES ORDER STATUS UPDATE === 10/7/2025 9:06:13 AM
+Checking Excel file: C:\Scripts\EngineeringTools\Priority List Master SHOP-SQL.xls
+File exists: True
+Successfully set status to Connected
+Checked orders count: 0
+=== END SALES ORDER STATUS UPDATE ===
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 9:06:56 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\Priority List Master SHOP-SQL.xls
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 0
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===

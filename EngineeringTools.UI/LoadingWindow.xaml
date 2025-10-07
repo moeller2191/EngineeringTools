@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Window x:Class="EngineeringTools.UI.LoadingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Engineering Tools - Loading" 
+        Height="400" Width="600"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        Topmost="True">
+    
+    <Border Background="White" BorderBrush="DarkBlue" BorderThickness="2" CornerRadius="10">
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            
+            <TextBlock Grid.Row="0" Text="Engineering Tools" FontSize="24" FontWeight="Bold" 
+                      Foreground="DarkBlue" HorizontalAlignment="Center"/>
+            
+            <TextBlock Grid.Row="2" Name="LoadingStatusText" Text="Initializing..." FontSize="16" 
+                      FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="DarkBlue"/>
+            
+            <ProgressBar Grid.Row="4" Name="LoadingProgressBar" Height="20" Minimum="0" Maximum="100" 
+                        Value="10" Background="LightGray" Foreground="DarkBlue"/>
+            
+            <TextBlock Grid.Row="6" Name="DetailedStatusText" Text="Starting Engineering Tools..." 
+                      FontSize="12" HorizontalAlignment="Center" Foreground="Gray"/>
+            
+            <StackPanel Grid.Row="8" Margin="40,0">
+                <TextBlock Text="Loading Steps:" FontWeight="Bold" Margin="0,0,0,5"/>
+                <TextBlock Name="Step1Text" Text=" Database connection" Foreground="Gray" Margin="10,0"/>
+                <TextBlock Name="Step2Text" Text=" Excel data loading" Foreground="Gray" Margin="10,0"/>
+                <TextBlock Name="Step3Text" Text=" Sales Order system" Foreground="Gray" Margin="10,0"/>
+                <TextBlock Name="Step4Text" Text=" Programming Check system" Foreground="Gray" Margin="10,0"/>
+                <TextBlock Name="Step5Text" Text=" User interface" Foreground="Gray" Margin="10,0"/>
+            </StackPanel>
+            
+            <TextBlock Grid.Row="10" Text="Please wait while the application loads..." 
+                      FontSize="10" HorizontalAlignment="Center" Foreground="Gray" Margin="0,20,0,0"/>
+        </Grid>
+    </Border>
+</Window>

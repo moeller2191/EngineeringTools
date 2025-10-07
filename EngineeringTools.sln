@@ -1,0 +1,30 @@
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XMLIndexer", "XMLIndexer\XMLIndexer.csproj", "{2A796EA0-6F84-20B8-0F28-8DF113B2C991}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EngineeringTools.UI", "EngineeringTools.UI\EngineeringTools.UI.csproj", "{12C8407B-41D5-44DF-B047-5E3438A344E7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2A796EA0-6F84-20B8-0F28-8DF113B2C991}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A796EA0-6F84-20B8-0F28-8DF113B2C991}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A796EA0-6F84-20B8-0F28-8DF113B2C991}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A796EA0-6F84-20B8-0F28-8DF113B2C991}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12C8407B-41D5-44DF-B047-5E3438A344E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12C8407B-41D5-44DF-B047-5E3438A344E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12C8407B-41D5-44DF-B047-5E3438A344E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12C8407B-41D5-44DF-B047-5E3438A344E7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {ADE5A182-6C44-46BD-B3B5-931213E7B8A4}
+	EndGlobalSection
+EndGlobal
