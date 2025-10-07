@@ -1478,7 +1478,15 @@ namespace EngineeringTools.UI
         
         private void AnalyzeXml_Click(object sender, RoutedEventArgs e)
         {
-            var partNumber = XmlAnalysisPartTextBox.Text.Trim();
+            var partTextBox = this.FindName("XmlAnalysisPartTextBox") as TextBox;
+            if (partTextBox == null)
+            {
+                MessageBox.Show("UI element not found. Please restart the application.", "UI Error", 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            
+            var partNumber = partTextBox.Text.Trim();
             if (string.IsNullOrEmpty(partNumber))
             {
                 MessageBox.Show("Please enter a part number to analyze.", "Input Required", 
@@ -1505,12 +1513,45 @@ namespace EngineeringTools.UI
                 // Load XML files
                 LoadXmlFilesForPart(connection, partNumber);
                 
-                XmlAnalysisStatus.Text = $"Found {ComponentData.Count} components, {XmlFileData.Count} XML files";
-                MainTabControl.SelectedIndex = 2; // Switch to XML Analysis tab
+                // Update status using FindName
+                var statusText = this.FindName("XmlAnalysisStatus") as TextBlock;
+                if (statusText != null)
+                {
+                    statusText.Text = $"Found {ComponentData.Count} components, {XmlFileData.Count} XML files";
+                }
+                
+                // Bind data to grids using FindName
+                var componentsGrid = this.FindName("XmlComponentsDataGrid") as DataGrid;
+                var xmlFilesGrid = this.FindName("XmlFilesDataGrid") as DataGrid;
+                
+                if (componentsGrid != null)
+                {
+                    componentsGrid.ItemsSource = null;
+                    componentsGrid.ItemsSource = ComponentData;
+                    componentsGrid.Items.Refresh();
+                }
+                
+                if (xmlFilesGrid != null)
+                {
+                    xmlFilesGrid.ItemsSource = null;
+                    xmlFilesGrid.ItemsSource = XmlFileData;
+                    xmlFilesGrid.Items.Refresh();
+                }
+                
+                // Switch to XML Analysis tab using FindName
+                var mainTabControl = this.FindName("MainTabControl") as TabControl;
+                if (mainTabControl != null)
+                {
+                    mainTabControl.SelectedIndex = 2; // XML Analysis tab
+                }
             }
             catch (Exception ex)
             {
-                XmlAnalysisStatus.Text = "Analysis failed";
+                var statusText = this.FindName("XmlAnalysisStatus") as TextBlock;
+                if (statusText != null)
+                {
+                    statusText.Text = "Analysis failed";
+                }
                 MessageBox.Show($"Analysis error: {ex.Message}", "Analysis Error", 
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
@@ -1580,7 +1621,11 @@ namespace EngineeringTools.UI
         private void Refresh_Click(object sender, RoutedEventArgs e)
         {
             CheckDatabaseConnection();
-            StatusTextBlock.Text = "Interface refreshed";
+            var statusTextBlock = this.FindName("StatusTextBlock") as TextBlock;
+            if (statusTextBlock != null)
+            {
+                statusTextBlock.Text = "Interface refreshed";
+            }
         }
         
         private void RebuildIndex_Click(object sender, RoutedEventArgs e)
@@ -1598,12 +1643,20 @@ namespace EngineeringTools.UI
         
         private void XmlSearch_Click(object sender, RoutedEventArgs e)
         {
-            MainTabControl.SelectedIndex = 2; // Switch to XML Analysis tab
+            var mainTabControl = this.FindName("MainTabControl") as TabControl;
+            if (mainTabControl != null)
+            {
+                mainTabControl.SelectedIndex = 2; // Switch to XML Analysis tab
+            }
         }
         
         private void CutlistGenerator_Click(object sender, RoutedEventArgs e)
         {
-            MainTabControl.SelectedIndex = 0; // Switch to Job Management tab
+            var mainTabControl = this.FindName("MainTabControl") as TabControl;
+            if (mainTabControl != null)
+            {
+                mainTabControl.SelectedIndex = 0; // Switch to Job Management tab
+            }
         }
         
         private void JobHistory_Click(object sender, RoutedEventArgs e)
@@ -1629,26 +1682,43 @@ namespace EngineeringTools.UI
         {
             try
             {
-                var salesOrder = SalesOrderTextBox.Text.Trim();
-                if (string.IsNullOrEmpty(salesOrder))
+                var salesOrderTextBox = this.FindName("SalesOrderTextBox") as TextBox;
+                var statusTextBlock = this.FindName("SalesOrderStatusTextBlock") as TextBlock;
+                
+                if (salesOrderTextBox == null || statusTextBlock == null)
                 {
-                    SalesOrderStatusTextBlock.Text = "Please enter a sales order number";
-                    SalesOrderStatusTextBlock.Foreground = System.Windows.Media.Brushes.Red;
+                    MessageBox.Show("UI elements not found. Please restart the application.", "UI Error", 
+                        MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
+                
+                var salesOrder = salesOrderTextBox.Text.Trim();
+                if (string.IsNullOrEmpty(salesOrder))
+                {
+                    statusTextBlock.Text = "Please enter a sales order number";
+                    statusTextBlock.Foreground = System.Windows.Media.Brushes.Red;
+                    return;
+                }
+
+                // Show loading message
+                statusTextBlock.Text = "Checking sales order status...";
+                statusTextBlock.Foreground = System.Windows.Media.Brushes.Blue;
+                
+                // Force UI update
+                this.UpdateLayout();
 
                 string excelPath = @"C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx";
                 bool isChecked = _mrpManager.CheckSalesOrder(salesOrder, excelPath);
 
                 if (isChecked)
                 {
-                    SalesOrderStatusTextBlock.Text = $"✓ Sales Order {salesOrder} has been checked";
-                    SalesOrderStatusTextBlock.Foreground = System.Windows.Media.Brushes.Green;
+                    statusTextBlock.Text = $"✓ Sales Order {salesOrder} has been checked";
+                    statusTextBlock.Foreground = System.Windows.Media.Brushes.Green;
                 }
                 else
                 {
-                    SalesOrderStatusTextBlock.Text = $"⚠ Sales Order {salesOrder} has NOT been checked";
-                    SalesOrderStatusTextBlock.Foreground = System.Windows.Media.Brushes.Red;
+                    statusTextBlock.Text = $"⚠ Sales Order {salesOrder} has NOT been checked";
+                    statusTextBlock.Foreground = System.Windows.Media.Brushes.Red;
                 }
 
                 UpdateSalesOrderStatus();
@@ -1664,11 +1734,21 @@ namespace EngineeringTools.UI
         {
             try
             {
-                var salesOrder = SalesOrderTextBox.Text.Trim();
+                var salesOrderTextBox = this.FindName("SalesOrderTextBox") as TextBox;
+                var statusTextBlock = this.FindName("SalesOrderStatusTextBlock") as TextBlock;
+                
+                if (salesOrderTextBox == null || statusTextBlock == null)
+                {
+                    MessageBox.Show("UI elements not found. Please restart the application.", "UI Error", 
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                
+                var salesOrder = salesOrderTextBox.Text.Trim();
                 if (string.IsNullOrEmpty(salesOrder))
                 {
-                    SalesOrderStatusTextBlock.Text = "Please enter a sales order number";
-                    SalesOrderStatusTextBlock.Foreground = System.Windows.Media.Brushes.Red;
+                    statusTextBlock.Text = "Please enter a sales order number";
+                    statusTextBlock.Foreground = System.Windows.Media.Brushes.Red;
                     return;
                 }
 
@@ -1677,8 +1757,8 @@ namespace EngineeringTools.UI
                 // Check if it already exists
                 if (_mrpManager.CheckSalesOrder(salesOrder, excelPath))
                 {
-                    SalesOrderStatusTextBlock.Text = $"Sales Order {salesOrder} is already checked";
-                    SalesOrderStatusTextBlock.Foreground = System.Windows.Media.Brushes.Blue;
+                    statusTextBlock.Text = $"Sales Order {salesOrder} is already checked";
+                    statusTextBlock.Foreground = System.Windows.Media.Brushes.Blue;
                     return;
                 }
 
@@ -1687,17 +1767,17 @@ namespace EngineeringTools.UI
                 
                 if (success)
                 {
-                    SalesOrderStatusTextBlock.Text = $"✓ Sales Order {salesOrder} has been marked as checked";
-                    SalesOrderStatusTextBlock.Foreground = System.Windows.Media.Brushes.Green;
+                    statusTextBlock.Text = $"✓ Sales Order {salesOrder} has been marked as checked";
+                    statusTextBlock.Foreground = System.Windows.Media.Brushes.Green;
                     
                     // Clear the textbox and refresh the list
-                    SalesOrderTextBox.Clear();
+                    salesOrderTextBox.Clear();
                     RefreshCheckedOrders_Click(sender, e);
                 }
                 else
                 {
-                    SalesOrderStatusTextBlock.Text = $"Failed to mark Sales Order {salesOrder} as checked";
-                    SalesOrderStatusTextBlock.Foreground = System.Windows.Media.Brushes.Red;
+                    statusTextBlock.Text = $"Failed to mark Sales Order {salesOrder} as checked";
+                    statusTextBlock.Foreground = System.Windows.Media.Brushes.Red;
                 }
 
                 UpdateSalesOrderStatus();
@@ -1771,7 +1851,10 @@ namespace EngineeringTools.UI
             
             try
             {
-                string excelPath = @"C:\Scripts\EngineeringTools\Priority List Master SHOP-SQL.xls";
+                var excelStatusTextBlock = this.FindName("ExcelStatusTextBlock") as TextBlock;
+                var checkedOrderCountTextBlock = this.FindName("CheckedOrderCountTextBlock") as TextBlock;
+                
+                string excelPath = @"C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx";
                 File.AppendAllText(debugFile, $"Checking Excel file: {excelPath}\n");
                 File.AppendAllText(debugFile, $"File exists: {File.Exists(excelPath)}\n");
                 
@@ -1779,9 +1862,12 @@ namespace EngineeringTools.UI
                 {
                     try 
                     { 
-                        ExcelStatusTextBlock.Text = "Connected";
-                        ExcelStatusTextBlock.Foreground = System.Windows.Media.Brushes.Green;
-                        File.AppendAllText(debugFile, "Successfully set status to Connected\n");
+                        if (excelStatusTextBlock != null)
+                        {
+                            excelStatusTextBlock.Text = "Connected";
+                            excelStatusTextBlock.Foreground = System.Windows.Media.Brushes.Green;
+                            File.AppendAllText(debugFile, "Successfully set status to Connected\n");
+                        }
                     }
                     catch (Exception uiEx)
                     {
@@ -1791,8 +1877,11 @@ namespace EngineeringTools.UI
                     try
                     {
                         var checkedOrders = _mrpManager.GetCheckedSalesOrders(excelPath);
-                        CheckedOrderCountTextBlock.Text = checkedOrders.Count.ToString();
-                        File.AppendAllText(debugFile, $"Checked orders count: {checkedOrders.Count}\n");
+                        if (checkedOrderCountTextBlock != null)
+                        {
+                            checkedOrderCountTextBlock.Text = checkedOrders.Count.ToString();
+                            File.AppendAllText(debugFile, $"Checked orders count: {checkedOrders.Count}\n");
+                        }
                     }
                     catch (Exception countEx)
                     {
@@ -1803,9 +1892,15 @@ namespace EngineeringTools.UI
                 {
                     try
                     {
-                        ExcelStatusTextBlock.Text = "Not Found";
-                        ExcelStatusTextBlock.Foreground = System.Windows.Media.Brushes.Red;
-                        CheckedOrderCountTextBlock.Text = "0";
+                        if (excelStatusTextBlock != null)
+                        {
+                            excelStatusTextBlock.Text = "Not Found";
+                            excelStatusTextBlock.Foreground = System.Windows.Media.Brushes.Red;
+                        }
+                        if (checkedOrderCountTextBlock != null)
+                        {
+                            checkedOrderCountTextBlock.Text = "0";
+                        }
                         File.AppendAllText(debugFile, "Excel file not found\n");
                     }
                     catch (Exception uiEx)
@@ -1818,9 +1913,18 @@ namespace EngineeringTools.UI
             {
                 try
                 {
-                    ExcelStatusTextBlock.Text = "Error";
-                    ExcelStatusTextBlock.Foreground = System.Windows.Media.Brushes.Red;
-                    CheckedOrderCountTextBlock.Text = "0";
+                    var excelStatusTextBlock = this.FindName("ExcelStatusTextBlock") as TextBlock;
+                    var checkedOrderCountTextBlock = this.FindName("CheckedOrderCountTextBlock") as TextBlock;
+                    
+                    if (excelStatusTextBlock != null)
+                    {
+                        excelStatusTextBlock.Text = "Error";
+                        excelStatusTextBlock.Foreground = System.Windows.Media.Brushes.Red;
+                    }
+                    if (checkedOrderCountTextBlock != null)
+                    {
+                        checkedOrderCountTextBlock.Text = "0";
+                    }
                 }
                 catch { }
                 File.AppendAllText(debugFile, $"Error in UpdateSalesOrderStatus: {ex.Message}\n");
@@ -1834,26 +1938,43 @@ namespace EngineeringTools.UI
         {
             try
             {
-                var partNumber = ProgramPartTextBox.Text.Trim();
-                if (string.IsNullOrEmpty(partNumber))
+                var programPartTextBox = this.FindName("ProgramPartTextBox") as TextBox;
+                var statusTextBlock = this.FindName("ProgramStatusTextBlock") as TextBlock;
+                
+                if (programPartTextBox == null || statusTextBlock == null)
                 {
-                    ProgramStatusTextBlock.Text = "Please enter a part number";
-                    ProgramStatusTextBlock.Foreground = System.Windows.Media.Brushes.Red;
+                    MessageBox.Show("UI elements not found. Please restart the application.", "UI Error", 
+                        MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
+                
+                var partNumber = programPartTextBox.Text.Trim();
+                if (string.IsNullOrEmpty(partNumber))
+                {
+                    statusTextBlock.Text = "Please enter a part number";
+                    statusTextBlock.Foreground = System.Windows.Media.Brushes.Red;
+                    return;
+                }
+
+                // Show loading message
+                statusTextBlock.Text = "Checking programming status...";
+                statusTextBlock.Foreground = System.Windows.Media.Brushes.Blue;
+                
+                // Force UI update
+                this.UpdateLayout();
 
                 string excelPath = @"C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx";
                 bool isProgrammed = _mrpManager.CheckPartProgrammed(partNumber, excelPath);
 
                 if (isProgrammed)
                 {
-                    ProgramStatusTextBlock.Text = $"✓ Part {partNumber} is programmed for 150 press";
-                    ProgramStatusTextBlock.Foreground = System.Windows.Media.Brushes.Green;
+                    statusTextBlock.Text = $"✓ Part {partNumber} is programmed for 150 press";
+                    statusTextBlock.Foreground = System.Windows.Media.Brushes.Green;
                 }
                 else
                 {
-                    ProgramStatusTextBlock.Text = $"⚠ Part {partNumber} is NOT programmed for 150 press";
-                    ProgramStatusTextBlock.Foreground = System.Windows.Media.Brushes.Red;
+                    statusTextBlock.Text = $"⚠ Part {partNumber} is NOT programmed for 150 press";
+                    statusTextBlock.Foreground = System.Windows.Media.Brushes.Red;
                 }
 
                 UpdateProgramStatus();
@@ -1869,11 +1990,21 @@ namespace EngineeringTools.UI
         {
             try
             {
-                var partNumber = ProgramPartTextBox.Text.Trim();
+                var programPartTextBox = this.FindName("ProgramPartTextBox") as TextBox;
+                var statusTextBlock = this.FindName("ProgramStatusTextBlock") as TextBlock;
+                
+                if (programPartTextBox == null || statusTextBlock == null)
+                {
+                    MessageBox.Show("UI elements not found. Please restart the application.", "UI Error", 
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                
+                var partNumber = programPartTextBox.Text.Trim();
                 if (string.IsNullOrEmpty(partNumber))
                 {
-                    ProgramStatusTextBlock.Text = "Please enter a part number";
-                    ProgramStatusTextBlock.Foreground = System.Windows.Media.Brushes.Red;
+                    statusTextBlock.Text = "Please enter a part number";
+                    statusTextBlock.Foreground = System.Windows.Media.Brushes.Red;
                     return;
                 }
 
@@ -1882,8 +2013,8 @@ namespace EngineeringTools.UI
                 // Check if it's already programmed
                 if (_mrpManager.CheckPartProgrammed(partNumber, excelPath))
                 {
-                    ProgramStatusTextBlock.Text = $"Part {partNumber} is already programmed";
-                    ProgramStatusTextBlock.Foreground = System.Windows.Media.Brushes.Blue;
+                    statusTextBlock.Text = $"Part {partNumber} is already programmed";
+                    statusTextBlock.Foreground = System.Windows.Media.Brushes.Blue;
                     return;
                 }
 
@@ -1892,17 +2023,17 @@ namespace EngineeringTools.UI
                 
                 if (success)
                 {
-                    ProgramStatusTextBlock.Text = $"✓ Part {partNumber} has been marked as programmed";
-                    ProgramStatusTextBlock.Foreground = System.Windows.Media.Brushes.Green;
+                    statusTextBlock.Text = $"✓ Part {partNumber} has been marked as programmed";
+                    statusTextBlock.Foreground = System.Windows.Media.Brushes.Green;
                     
                     // Clear the textbox and refresh status
-                    ProgramPartTextBox.Clear();
+                    programPartTextBox.Clear();
                     UpdateProgramStatus();
                 }
                 else
                 {
-                    ProgramStatusTextBlock.Text = $"Failed to mark Part {partNumber} as programmed";
-                    ProgramStatusTextBlock.Foreground = System.Windows.Media.Brushes.Red;
+                    statusTextBlock.Text = $"Failed to mark Part {partNumber} as programmed";
+                    statusTextBlock.Foreground = System.Windows.Media.Brushes.Red;
                 }
             }
             catch (Exception ex)
@@ -1916,13 +2047,30 @@ namespace EngineeringTools.UI
         {
             try
             {
-                var jobNumber = ProgramJobTextBox.Text.Trim();
-                if (string.IsNullOrEmpty(jobNumber))
+                var programJobTextBox = this.FindName("ProgramJobTextBox") as TextBox;
+                var statusTextBlock = this.FindName("ProgramStatusTextBlock") as TextBlock;
+                
+                if (programJobTextBox == null || statusTextBlock == null)
                 {
-                    ProgramStatusTextBlock.Text = "Please enter a job number to check programming";
-                    ProgramStatusTextBlock.Foreground = System.Windows.Media.Brushes.Red;
+                    MessageBox.Show("UI elements not found. Please restart the application.", "UI Error", 
+                        MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
+                
+                var jobNumber = programJobTextBox.Text.Trim();
+                if (string.IsNullOrEmpty(jobNumber))
+                {
+                    statusTextBlock.Text = "Please enter a job number to check programming";
+                    statusTextBlock.Foreground = System.Windows.Media.Brushes.Red;
+                    return;
+                }
+
+                // Show loading message
+                statusTextBlock.Text = "Loading job parts and checking programming...";
+                statusTextBlock.Foreground = System.Windows.Media.Brushes.Blue;
+                
+                // Force UI update
+                this.UpdateLayout();
 
                 string excelPath = @"C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx";
                 
@@ -1931,12 +2079,14 @@ namespace EngineeringTools.UI
                 
                 if (jobParts.Count == 0)
                 {
-                    ProgramStatusTextBlock.Text = $"No parts found for job {jobNumber}. Load the job first or check job number.";
-                    ProgramStatusTextBlock.Foreground = System.Windows.Media.Brushes.Orange;
+                    statusTextBlock.Text = $"No parts found for job {jobNumber}. Load the job first or check job number.";
+                    statusTextBlock.Foreground = System.Windows.Media.Brushes.Orange;
                     return;
                 }
                 
-                var missingPrograms = _mrpManager.GetMissingPrograms(jobParts, excelPath);
+                // Use batch method for better performance
+                var programmingResults = _mrpManager.CheckPartProgrammedBatch(jobParts, excelPath);
+                var missingPrograms = jobParts.Where(part => !programmingResults.GetValueOrDefault(part, false)).ToList();
                 
                 MissingProgramData.Clear();
                 
@@ -1951,9 +2101,18 @@ namespace EngineeringTools.UI
                         Status = "Missing Program"
                     });
                 }
+                
+                // Force refresh the DataGrid
+                var missingProgramsGrid = this.FindName("MissingProgramsDataGrid") as DataGrid;
+                if (missingProgramsGrid != null)
+                {
+                    missingProgramsGrid.ItemsSource = null;
+                    missingProgramsGrid.ItemsSource = MissingProgramData;
+                    missingProgramsGrid.Items.Refresh();
+                }
 
-                ProgramStatusTextBlock.Text = $"Job {jobNumber}: Found {MissingProgramData.Count} parts missing programs (from {jobParts.Count} total parts)";
-                ProgramStatusTextBlock.Foreground = MissingProgramData.Count > 0 ? 
+                statusTextBlock.Text = $"Job {jobNumber}: Found {MissingProgramData.Count} parts missing programs (from {jobParts.Count} total parts)";
+                statusTextBlock.Foreground = MissingProgramData.Count > 0 ? 
                     System.Windows.Media.Brushes.Red : System.Windows.Media.Brushes.Green;
 
                 UpdateProgramStatus();
@@ -2078,7 +2237,7 @@ namespace EngineeringTools.UI
                 File.AppendAllText(debugFile, $"ProgramExcelStatusTextBlock found: {programExcelStatus != null}\n");
                 File.AppendAllText(debugFile, $"ProgrammedPartCountTextBlock found: {programmedPartCount != null}\n");
                 
-                string excelPath = @"C:\Scripts\EngineeringTools\Priority List Master SHOP-SQL.xls";
+                string excelPath = @"C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx";
                 File.AppendAllText(debugFile, $"Checking Excel file for programming: {excelPath}\n");
                 File.AppendAllText(debugFile, $"File exists: {File.Exists(excelPath)}\n");
                 

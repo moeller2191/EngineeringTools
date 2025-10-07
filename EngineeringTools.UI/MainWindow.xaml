@@ -261,34 +261,6 @@
                         </StackPanel>
                     </GroupBox>
                     
-                    <!-- Checked Orders List -->
-                    <GroupBox Grid.Row="4" Header="Recently Checked Sales Orders">
-                        <Grid Margin="5">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-                            
-                            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,5">
-                                <Button Name="RefreshCheckedOrdersButton" Content="Refresh List" 
-                                       Padding="8,4" Click="RefreshCheckedOrders_Click" Background="LightYellow"/>
-                                <TextBlock Text="(Shows last 50 checked orders)" 
-                                          VerticalAlignment="Center" Margin="10,0" FontStyle="Italic" Foreground="Gray"/>
-                            </StackPanel>
-                            
-                            <DataGrid Grid.Row="1" Name="CheckedSalesOrdersDataGrid" 
-                                     AutoGenerateColumns="False" CanUserAddRows="False" 
-                                     IsReadOnly="True" SelectionMode="Single"
-                                     GridLinesVisibility="Horizontal" AlternatingRowBackground="LightGray">
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Sales Order" Binding="{Binding SalesOrder}" Width="150"/>
-                                    <DataGridTextColumn Header="Date Checked" Binding="{Binding DateChecked}" Width="150"/>
-                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
-                                </DataGrid.Columns>
-                            </DataGrid>
-                        </Grid>
-                    </GroupBox>
-                    
                     <!-- Action Buttons -->
                     <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
                         <Button Name="ExportCheckedOrdersButton" Content="Export to CSV" 

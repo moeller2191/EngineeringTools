@@ -1188,6 +1188,82 @@ namespace XMLIndexer
 
             return missingPrograms;
         }
+
+        /// <summary>
+        /// Check multiple parts for programming status at once - optimized batch method
+        /// Opens Excel once and checks all parts in a single session
+        /// </summary>
+        public Dictionary<string, bool> CheckPartProgrammedBatch(List<string> formDetails, string excelPath)
+        {
+            var results = new Dictionary<string, bool>();
+            
+            if (formDetails == null || formDetails.Count == 0 || string.IsNullOrEmpty(excelPath) || !File.Exists(excelPath))
+                return results;
+
+            try
+            {
+                Type? excelType = Type.GetTypeFromProgID("Excel.Application");
+                if (excelType == null) return results;
+
+                dynamic excel = Activator.CreateInstance(excelType)!;
+                excel.Visible = false;
+                excel.DisplayAlerts = false;
+
+                dynamic workbook = excel.Workbooks.Open(excelPath);
+                
+                // Look for "Press Programs" worksheet
+                dynamic? worksheet = null;
+                for (int i = 1; i <= workbook.Worksheets.Count; i++)
+                {
+                    if (workbook.Worksheets[i].Name.Equals("Press Programs", StringComparison.OrdinalIgnoreCase))
+                    {
+                        worksheet = workbook.Worksheets[i];
+                        break;
+                    }
+                }
+
+                // Initialize all results to false
+                foreach (var formDetail in formDetails)
+                {
+                    results[formDetail] = false;
+                }
+
+                if (worksheet != null)
+                {
+                    int lastRow = worksheet.UsedRange.Rows.Count;
+                    
+                    for (int row = 2; row <= lastRow; row++) // Start from row 2 (skip header)
+                    {
+                        var cellFormDetail = GetCellValue(worksheet, row, 1)?.ToString()?.Trim(); // Column A = Form Detail
+                        if (!string.IsNullOrEmpty(cellFormDetail) && results.ContainsKey(cellFormDetail))
+                        {
+                            var programmedValue = GetCellValue(worksheet, row, 2); // Column B = 150 Programmed
+                            int programmedCount = 0;
+                            if (programmedValue != null && int.TryParse(programmedValue.ToString(), out programmedCount))
+                            {
+                                results[cellFormDetail] = programmedCount > 0;
+                            }
+                        }
+                    }
+                }
+
+                workbook.Close(false);
+                excel.Quit();
+
+                // Clean up COM objects
+                if (worksheet != null)
+                    System.Runtime.InteropServices.Marshal.ReleaseComObject(worksheet);
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(workbook);
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(excel);
+
+                return results;
+            }
+            catch
+            {
+                return results; // Return partial results if Excel reading fails
+            }
+        }
+
         // Helper method for reading Excel cell values
         private object GetCellValue(dynamic worksheet, int row, int col)
         {
