@@ -56,6 +56,30 @@ namespace XMLIndexer
                 var indexCommand = new SqliteCommand(sql, connection);
                 indexCommand.ExecuteNonQuery();
             }
+            
+            // Create SalesOrders table for fast lookups
+            var createSalesOrdersTable = new SqliteCommand(@"
+                CREATE TABLE IF NOT EXISTS SalesOrders (
+                    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                    SalesOrder TEXT UNIQUE NOT NULL
+                )", connection);
+            createSalesOrdersTable.ExecuteNonQuery();
+            
+            var createSalesOrdersIndex = new SqliteCommand(
+                "CREATE INDEX IF NOT EXISTS idx_salesorder ON SalesOrders(SalesOrder)", connection);
+            createSalesOrdersIndex.ExecuteNonQuery();
+            
+            // Create ProgrammedParts table for fast lookups
+            var createProgrammedPartsTable = new SqliteCommand(@"
+                CREATE TABLE IF NOT EXISTS ProgrammedParts (
+                    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                    PartNumber TEXT UNIQUE NOT NULL
+                )", connection);
+            createProgrammedPartsTable.ExecuteNonQuery();
+            
+            var createProgrammedPartsIndex = new SqliteCommand(
+                "CREATE INDEX IF NOT EXISTS idx_partnumber ON ProgrammedParts(PartNumber)", connection);
+            createProgrammedPartsIndex.ExecuteNonQuery();
         }
         
         public class MrpItem
@@ -1276,6 +1300,435 @@ namespace XMLIndexer
             {
                 return null;
             }
+        }
+
+        // =========================================================================================
+        // NEW DATABASE METHODS FOR SALES ORDERS AND PROGRAMMED PARTS
+        // =========================================================================================
+
+        /// <summary>
+        /// Check if a sales order exists in the database
+        /// </summary>
+        public bool CheckSalesOrderInDatabase(string salesOrder)
+        {
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                connection.Open();
+
+                var command = new SqliteCommand("SELECT COUNT(*) FROM SalesOrders WHERE SalesOrder = @salesOrder", connection);
+                command.Parameters.AddWithValue("@salesOrder", salesOrder);
+
+                var count = Convert.ToInt32(command.ExecuteScalar());
+                return count > 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Add a sales order to the database
+        /// </summary>
+        public bool AddSalesOrderToDatabase(string salesOrder)
+        {
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                connection.Open();
+
+                var command = new SqliteCommand("INSERT OR IGNORE INTO SalesOrders (SalesOrder) VALUES (@salesOrder)", connection);
+                command.Parameters.AddWithValue("@salesOrder", salesOrder);
+                int result = command.ExecuteNonQuery();
+                return result > 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Check if a part is programmed in the database
+        /// </summary>
+        public bool CheckPartProgrammedInDatabase(string partNumber)
+        {
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                connection.Open();
+
+                var command = new SqliteCommand("SELECT COUNT(*) FROM ProgrammedParts WHERE PartNumber = @partNumber", connection);
+                command.Parameters.AddWithValue("@partNumber", partNumber);
+
+                var count = Convert.ToInt32(command.ExecuteScalar());
+                return count > 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Add a programmed part to the database
+        /// </summary>
+        public void AddProgrammedPartToDatabase(string partNumber)
+        {
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                connection.Open();
+
+                var command = new SqliteCommand("INSERT OR IGNORE INTO ProgrammedParts (PartNumber) VALUES (@partNumber)", connection);
+                command.Parameters.AddWithValue("@partNumber", partNumber);
+                command.ExecuteNonQuery();
+            }
+            catch
+            {
+                // Handle error silently
+            }
+        }
+
+        public List<string> GetMissingProgramsFromDatabase(List<string> partNumbers)
+        {
+            var missingParts = new List<string>();
+            if (partNumbers == null || partNumbers.Count == 0) return missingParts;
+
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                connection.Open();
+
+                foreach (var partNumber in partNumbers)
+                {
+                    var command = new SqliteCommand("SELECT COUNT(*) FROM ProgrammedParts WHERE PartNumber = @partNumber", connection);
+                    command.Parameters.AddWithValue("@partNumber", partNumber);
+
+                    var count = Convert.ToInt32(command.ExecuteScalar());
+                    if (count == 0)
+                    {
+                        missingParts.Add(partNumber);
+                    }
+                }
+            }
+            catch
+            {
+                // Return empty list if error
+            }
+
+            return missingParts;
+        }
+
+        /// <summary>
+        /// Get all checked sales orders from database
+        /// </summary>
+        public List<string> GetCheckedSalesOrdersFromDatabase()
+        {
+            var salesOrders = new List<string>();
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                connection.Open();
+                
+                var command = new SqliteCommand("SELECT SalesOrder FROM SalesOrders ORDER BY SalesOrder", connection);
+                using var reader = command.ExecuteReader();
+                
+                while (reader.Read())
+                {
+                    salesOrders.Add(reader.GetString("SalesOrder"));
+                }
+            }
+            catch
+            {
+                // Return empty list if error
+            }
+            
+            return salesOrders;
+        }
+
+        /// <summary>
+        /// Get all programmed parts from database
+        /// </summary>
+        public List<string> GetProgrammedPartsFromDatabase()
+        {
+            var parts = new List<string>();
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                connection.Open();
+                
+                var command = new SqliteCommand("SELECT PartNumber FROM ProgrammedParts ORDER BY PartNumber", connection);
+                using var reader = command.ExecuteReader();
+                
+                while (reader.Read())
+                {
+                    parts.Add(reader.GetString("PartNumber"));
+                }
+            }
+            catch
+            {
+                // Return empty list if error
+            }
+            
+            return parts;
+        }
+
+        /// <summary>
+        /// Import real data from Excel files - one time operation
+        /// </summary>
+        public void ImportRealData()
+        {
+            try
+            {
+                // Clear existing data first
+                using var connection = new SqliteConnection(_connectionString);
+                connection.Open();
+                
+                using var command1 = new SqliteCommand("DELETE FROM SalesOrders", connection);
+                command1.ExecuteNonQuery();
+                
+                using var command2 = new SqliteCommand("DELETE FROM ProgrammedParts", connection);
+                command2.ExecuteNonQuery();
+
+                // Import from Priority List Master SHOP-SQL.xls (use absolute path)
+                var priorityListPath = @"c:\Scripts\EngineeringTools\Priority List Master SHOP-SQL.xls";
+                Console.WriteLine($"Looking for Priority List at: {priorityListPath}");
+                if (File.Exists(priorityListPath))
+                {
+                    Console.WriteLine("Importing from Priority List Master SHOP-SQL.xls");
+                    ImportFromSingleExcelFile(priorityListPath, "Priority List");
+                }
+                else
+                {
+                    Console.WriteLine("Priority List Master SHOP-SQL.xls not found!");
+                }
+
+                // DISABLED: EngineeringDatabase.xlsx contains stale data
+                // Only using current Priority List Master SHOP-SQL.xls now
+                Console.WriteLine("Skipping EngineeringDatabase.xlsx - using only current Priority List data");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error importing real data: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Simple, safe method to import from one Excel file
+        /// </summary>
+        private void ImportFromSingleExcelFile(string excelPath, string? specificSheet)
+        {
+            try
+            {
+                Type? excelType = Type.GetTypeFromProgID("Excel.Application");
+                if (excelType == null) return;
+
+                dynamic excelApp = Activator.CreateInstance(excelType);
+                excelApp.Visible = false;
+                excelApp.DisplayAlerts = false;
+
+                dynamic workbook = excelApp.Workbooks.Open(excelPath);
+
+                // Process either specific sheet or all sheets
+                if (!string.IsNullOrEmpty(specificSheet))
+                {
+                    ProcessSingleSheet(workbook.Worksheets[specificSheet]);
+                }
+                else
+                {
+                    // Process all sheets
+                    for (int i = 1; i <= workbook.Worksheets.Count; i++)
+                    {
+                        dynamic worksheet = workbook.Worksheets[i];
+                        Console.WriteLine($"Processing sheet: {worksheet.Name}");
+                        ProcessSingleSheet(worksheet);
+                    }
+                }
+
+                workbook.Close(false);
+                excelApp.Quit();
+
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(workbook);
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(excelApp);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error processing {excelPath}: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Process a single worksheet for data
+        /// </summary>
+        private void ProcessSingleSheet(dynamic worksheet)
+        {
+            try
+            {
+                string sheetName = worksheet.Name;
+                Console.WriteLine($"Processing sheet: {sheetName}");
+                
+                dynamic usedRange = worksheet.UsedRange;
+                if (usedRange == null) 
+                {
+                    Console.WriteLine($"  No used range found in sheet {sheetName}");
+                    return;
+                }
+
+                int lastRow = usedRange.Rows.Count;
+                int lastCol = usedRange.Columns.Count;
+                Console.WriteLine($"  Sheet dimensions: {lastRow} rows, {lastCol} columns");
+
+                if (lastRow < 2) 
+                {
+                    Console.WriteLine($"  Skipping sheet {sheetName} - not enough data rows");
+                    return; // Need at least header + data row
+                }
+
+                // Find columns by scanning headers
+                int salesOrderCol = -1;
+                int partNumberCol = -1;
+                int programCol = -1;
+
+                Console.WriteLine("  Scanning headers:");
+                for (int col = 1; col <= Math.Min(lastCol, 30); col++)
+                {
+                    string header = worksheet.Cells[1, col].Value2?.ToString()?.Trim() ?? "";
+
+                    if (string.IsNullOrEmpty(header)) continue;
+                    
+                    Console.WriteLine($"    Col {col}: '{header}'");
+
+                    // Look for sales order column (try multiple variations)
+                    if (header.Equals("SO", StringComparison.OrdinalIgnoreCase) ||
+                        header.Equals("fsono", StringComparison.OrdinalIgnoreCase) ||
+                        (header.Contains("Sales", StringComparison.OrdinalIgnoreCase) &&
+                         header.Contains("Order", StringComparison.OrdinalIgnoreCase)) ||
+                        header.Contains("SO#", StringComparison.OrdinalIgnoreCase))
+                    {
+                        salesOrderCol = col;
+                        Console.WriteLine($"      -> Found Sales Order column at {col}");
+                    }
+                    // Look for part number column (try multiple variations)
+                    else if (header.Equals("Form Detail", StringComparison.OrdinalIgnoreCase) ||
+                             header.Equals("fpartno", StringComparison.OrdinalIgnoreCase) ||
+                             header.Equals("Part Number", StringComparison.OrdinalIgnoreCase) ||
+                             (header.Contains("Part", StringComparison.OrdinalIgnoreCase) &&
+                              header.Contains("Number", StringComparison.OrdinalIgnoreCase)) ||
+                             header.Contains("Part#", StringComparison.OrdinalIgnoreCase) ||
+                             header.Equals("PartNumber", StringComparison.OrdinalIgnoreCase))
+                    {
+                        partNumberCol = col;
+                        Console.WriteLine($"      -> Found Part Number column at {col}");
+                    }
+                    // Look for program column (try multiple variations)
+                    else if (header.Contains("Program", StringComparison.OrdinalIgnoreCase) ||
+                             header.Contains("Prog", StringComparison.OrdinalIgnoreCase))
+                    {
+                        programCol = col;
+                        Console.WriteLine($"      -> Found Program column at {col}");
+                    }
+                }
+
+                // Import data using database connection
+                using var connection = new SqliteConnection(_connectionString);
+                connection.Open();
+
+                // Import sales orders if found
+                if (salesOrderCol > 0)
+                {
+                    Console.WriteLine($"  Importing sales orders from column {salesOrderCol}");
+                    ImportSalesOrderData(worksheet, salesOrderCol, lastRow, connection);
+                }
+                else
+                {
+                    Console.WriteLine("  No sales order column found");
+                }
+
+                // Import programmed parts - special handling for Press programs sheet
+                if (sheetName.Equals("Press programs", StringComparison.OrdinalIgnoreCase) && partNumberCol > 0)
+                {
+                    Console.WriteLine($"  Importing programmed parts from Press programs sheet, column {partNumberCol}");
+                    ImportProgrammedPartsFromPressSheet(worksheet, partNumberCol, lastRow, connection);
+                }
+                // Import programmed parts if both columns found
+                else if (partNumberCol > 0 && programCol > 0)
+                {
+                    Console.WriteLine($"  Importing programmed parts from columns {partNumberCol} (part) and {programCol} (program)");
+                    ImportProgrammedPartsData(worksheet, partNumberCol, programCol, lastRow, connection);
+                }
+                else
+                {
+                    Console.WriteLine($"  Cannot import programmed parts - Part column: {partNumberCol}, Program column: {programCol}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error processing sheet: {ex.Message}");
+            }
+        }
+
+        private void ImportSalesOrderData(dynamic worksheet, int salesOrderCol, int lastRow, SqliteConnection connection)
+        {
+            var salesOrders = new HashSet<string>();
+
+            for (int row = 2; row <= lastRow; row++)
+            {
+                string salesOrder = worksheet.Cells[row, salesOrderCol].Value2?.ToString()?.Trim() ?? "";
+                if (!string.IsNullOrEmpty(salesOrder) && !salesOrders.Contains(salesOrder))
+                {
+                    salesOrders.Add(salesOrder);
+                    using var cmd = new SqliteCommand("INSERT OR IGNORE INTO SalesOrders (SalesOrder) VALUES (@salesOrder)", connection);
+                    cmd.Parameters.AddWithValue("@salesOrder", salesOrder);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            Console.WriteLine($"Imported {salesOrders.Count} sales orders");
+        }
+
+        private void ImportProgrammedPartsData(dynamic worksheet, int partNumberCol, int programCol, int lastRow, SqliteConnection connection)
+        {
+            var programmedParts = new HashSet<string>();
+
+            for (int row = 2; row <= lastRow; row++)
+            {
+                string partNumber = worksheet.Cells[row, partNumberCol].Value2?.ToString()?.Trim() ?? "";
+                string program = worksheet.Cells[row, programCol].Value2?.ToString()?.Trim() ?? "";
+
+                if (!string.IsNullOrEmpty(partNumber) && !string.IsNullOrEmpty(program) &&
+                    !programmedParts.Contains(partNumber))
+                {
+                    programmedParts.Add(partNumber);
+                    using var cmd = new SqliteCommand("INSERT OR IGNORE INTO ProgrammedParts (PartNumber) VALUES (@partNumber)", connection);
+                    cmd.Parameters.AddWithValue("@partNumber", partNumber);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            Console.WriteLine($"Imported {programmedParts.Count} programmed parts");
+        }
+
+        private void ImportProgrammedPartsFromPressSheet(dynamic worksheet, int partNumberCol, int lastRow, SqliteConnection connection)
+        {
+            var programmedParts = new HashSet<string>();
+
+            for (int row = 2; row <= lastRow; row++)
+            {
+                string partNumber = worksheet.Cells[row, partNumberCol].Value2?.ToString()?.Trim() ?? "";
+
+                // If a part exists in the Press programs sheet, it's considered programmed
+                if (!string.IsNullOrEmpty(partNumber) && !programmedParts.Contains(partNumber))
+                {
+                    programmedParts.Add(partNumber);
+                    using var cmd = new SqliteCommand("INSERT OR IGNORE INTO ProgrammedParts (PartNumber) VALUES (@partNumber)", connection);
+                    cmd.Parameters.AddWithValue("@partNumber", partNumber);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            Console.WriteLine($"Imported {programmedParts.Count} programmed parts from Press programs sheet");
         }
     }
 }

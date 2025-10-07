@@ -374,3 +374,498 @@ Excel file found, getting programmed parts...
 GetProgrammedParts succeeded, count: 7931
 Program status set to Connected
 === END PROGRAM STATUS UPDATE ===
+
+=== CONSTRUCTOR START === 10/7/2025 9:36:08 AM
+Collections initialized
+UI Elements found - CutlistGrid: True, ExcelStatus: True, CheckedCount: True
+CutlistDataGrid bound to CutlistData
+Test item added - Collection count: 1
+Excel status updated to Connected
+Calling UpdateProgramStatus from constructor
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 9:36:08 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 0
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+=== CONSTRUCTOR END ===
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 9:36:58 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 0
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+
+=== SALES ORDER STATUS UPDATE === 10/7/2025 9:37:56 AM
+Checking Excel file: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Successfully set status to Connected
+Checked orders count: 0
+=== END SALES ORDER STATUS UPDATE ===
+
+=== CONSTRUCTOR START === 10/7/2025 9:39:46 AM
+Collections initialized
+UI Elements found - CutlistGrid: True, ExcelStatus: True, CheckedCount: True
+CutlistDataGrid bound to CutlistData
+Test item added - Collection count: 1
+Excel status updated to Connected
+Calling UpdateProgramStatus from constructor
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 9:39:49 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 0
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+=== CONSTRUCTOR END ===
+
+=== SALES ORDER STATUS UPDATE === 10/7/2025 9:39:56 AM
+Checking Excel file: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Successfully set status to Connected
+Checked orders count: 0
+=== END SALES ORDER STATUS UPDATE ===
+
+=== SALES ORDER STATUS UPDATE === 10/7/2025 9:40:03 AM
+Checking Excel file: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Successfully set status to Connected
+Checked orders count: 0
+=== END SALES ORDER STATUS UPDATE ===
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 9:40:09 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 0
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+
+=== CONSTRUCTOR START === 10/7/2025 9:41:52 AM
+Collections initialized
+UI Elements found - CutlistGrid: True, ExcelStatus: True, CheckedCount: True
+CutlistDataGrid bound to CutlistData
+Test item added - Collection count: 1
+Excel status updated to Connected
+Calling UpdateProgramStatus from constructor
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 9:41:52 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 5
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+=== CONSTRUCTOR END ===
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 9:42:02 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 5
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 9:42:19 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 5
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+
+=== CONSTRUCTOR START === 10/7/2025 9:45:10 AM
+Collections initialized
+UI Elements found - CutlistGrid: True, ExcelStatus: True, CheckedCount: True
+CutlistDataGrid bound to CutlistData
+Test item added - Collection count: 1
+Excel status updated to Connected
+Calling UpdateProgramStatus from constructor
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 9:45:10 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 5
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+=== CONSTRUCTOR END ===
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 9:45:26 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 5
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+
+=== CONSTRUCTOR START === 10/7/2025 9:47:18 AM
+Collections initialized
+UI Elements found - CutlistGrid: True, ExcelStatus: True, CheckedCount: True
+CutlistDataGrid bound to CutlistData
+Test item added - Collection count: 1
+Excel status updated to Connected
+Calling UpdateProgramStatus from constructor
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 9:49:34 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 0
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+=== CONSTRUCTOR END ===
+
+=== CONSTRUCTOR START === 10/7/2025 9:52:09 AM
+Collections initialized
+UI Elements found - CutlistGrid: True, ExcelStatus: True, CheckedCount: True
+CutlistDataGrid bound to CutlistData
+Test item added - Collection count: 1
+Excel status updated to Connected
+Calling UpdateProgramStatus from constructor
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 9:53:40 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 0
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+=== CONSTRUCTOR END ===
+
+=== CONSTRUCTOR START === 10/7/2025 9:54:13 AM
+Collections initialized
+UI Elements found - CutlistGrid: True, ExcelStatus: True, CheckedCount: True
+CutlistDataGrid bound to CutlistData
+Test item added - Collection count: 1
+Excel status updated to Connected
+Calling UpdateProgramStatus from constructor
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 9:58:06 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 0
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+=== CONSTRUCTOR END ===
+
+=== CONSTRUCTOR START === 10/7/2025 9:58:11 AM
+Collections initialized
+UI Elements found - CutlistGrid: True, ExcelStatus: True, CheckedCount: True
+CutlistDataGrid bound to CutlistData
+Test item added - Collection count: 1
+Excel status updated to Connected
+Calling UpdateProgramStatus from constructor
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 9:58:11 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 5
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+=== CONSTRUCTOR END ===
+
+=== CONSTRUCTOR START === 10/7/2025 9:58:24 AM
+Collections initialized
+UI Elements found - CutlistGrid: True, ExcelStatus: True, CheckedCount: True
+CutlistDataGrid bound to CutlistData
+Test item added - Collection count: 1
+Excel status updated to Connected
+Calling UpdateProgramStatus from constructor
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 9:58:25 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 5
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+=== CONSTRUCTOR END ===
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 9:58:34 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 5
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+
+=== CONSTRUCTOR START === 10/7/2025 9:58:48 AM
+Collections initialized
+UI Elements found - CutlistGrid: True, ExcelStatus: True, CheckedCount: True
+CutlistDataGrid bound to CutlistData
+Test item added - Collection count: 1
+Excel status updated to Connected
+Calling UpdateProgramStatus from constructor
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 9:58:49 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 5
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+=== CONSTRUCTOR END ===
+
+=== SALES ORDER STATUS UPDATE === 10/7/2025 9:58:51 AM
+Checking Excel file: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Successfully set status to Connected
+Checked orders count: 5
+=== END SALES ORDER STATUS UPDATE ===
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 9:59:02 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 5
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+
+=== CONSTRUCTOR START === 10/7/2025 10:21:01 AM
+Collections initialized
+UI Elements found - CutlistGrid: True, ExcelStatus: True, CheckedCount: True
+CutlistDataGrid bound to CutlistData
+Test item added - Collection count: 1
+Excel status updated to Connected
+Calling UpdateProgramStatus from constructor
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 10:21:02 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 0
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+=== CONSTRUCTOR END ===
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 10:21:21 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 0
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+
+=== SALES ORDER STATUS UPDATE === 10/7/2025 10:21:30 AM
+Checking Excel file: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Successfully set status to Connected
+Checked orders count: 0
+=== END SALES ORDER STATUS UPDATE ===
+
+=== CONSTRUCTOR START === 10/7/2025 10:25:45 AM
+Collections initialized
+UI Elements found - CutlistGrid: True, ExcelStatus: True, CheckedCount: True
+CutlistDataGrid bound to CutlistData
+Test item added - Collection count: 1
+Excel status updated to Connected
+Calling UpdateProgramStatus from constructor
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 10:26:24 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 0
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+=== CONSTRUCTOR END ===
+
+=== SALES ORDER STATUS UPDATE === 10/7/2025 10:26:37 AM
+Checking Excel file: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Successfully set status to Connected
+Checked orders count: 3991
+=== END SALES ORDER STATUS UPDATE ===
+
+=== SALES ORDER STATUS UPDATE === 10/7/2025 10:26:48 AM
+Checking Excel file: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Successfully set status to Connected
+Checked orders count: 3992
+=== END SALES ORDER STATUS UPDATE ===
+
+=== SALES ORDER STATUS UPDATE === 10/7/2025 10:26:48 AM
+Checking Excel file: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Successfully set status to Connected
+Checked orders count: 3992
+=== END SALES ORDER STATUS UPDATE ===
+
+=== SALES ORDER STATUS UPDATE === 10/7/2025 10:26:50 AM
+Checking Excel file: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Successfully set status to Connected
+Checked orders count: 3992
+=== END SALES ORDER STATUS UPDATE ===
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 10:26:58 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 0
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+
+=== CONSTRUCTOR START === 10/7/2025 10:29:57 AM
+Collections initialized
+UI Elements found - CutlistGrid: True, ExcelStatus: True, CheckedCount: True
+CutlistDataGrid bound to CutlistData
+Test item added - Collection count: 1
+Excel status updated to Connected
+Calling UpdateProgramStatus from constructor
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 10:33:53 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 7887
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+=== CONSTRUCTOR END ===
+
+=== CONSTRUCTOR START === 10/7/2025 10:38:39 AM
+
+=== CONSTRUCTOR START === 10/7/2025 10:39:16 AM
+Collections initialized
+UI Elements found - CutlistGrid: True, ExcelStatus: True, CheckedCount: True
+CutlistDataGrid bound to CutlistData
+Test item added - Collection count: 1
+Excel status updated to Connected
+Calling UpdateProgramStatus from constructor
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 10:45:40 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 7887
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+=== CONSTRUCTOR END ===
+Collections initialized
+UI Elements found - CutlistGrid: True, ExcelStatus: True, CheckedCount: True
+CutlistDataGrid bound to CutlistData
+Test item added - Collection count: 1
+Excel status updated to Connected
+Calling UpdateProgramStatus from constructor
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 10:45:44 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 7887
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+=== CONSTRUCTOR END ===
+
+=== SALES ORDER STATUS UPDATE === 10/7/2025 10:46:57 AM
+Checking Excel file: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Successfully set status to Connected
+Checked orders count: 4093
+=== END SALES ORDER STATUS UPDATE ===
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 10:47:03 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 7887
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 10:47:05 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 7887
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 10:47:05 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 7887
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 10:47:05 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 7887
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===
+
+=== PROGRAM STATUS UPDATE === 10/7/2025 10:47:06 AM
+ProgramExcelStatusTextBlock found: True
+ProgrammedPartCountTextBlock found: True
+Checking Excel file for programming: C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx
+File exists: True
+Excel file found, getting programmed parts...
+GetProgrammedParts succeeded, count: 7887
+Program status set to Connected
+=== END PROGRAM STATUS UPDATE ===

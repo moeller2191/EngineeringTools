@@ -36,6 +36,9 @@ namespace EngineeringTools.UI
             ConnectionString = $"Data Source={DatabasePath}";
             _mrpManager = new MrpDataManager(DatabasePath);
             
+            // Import real data from both Excel files
+            _mrpManager.ImportRealData();
+            
             // Initialize data collections
             MrpData = new ObservableCollection<MrpDataItem>();
             CutlistData = new ObservableCollection<CutlistItem>();
@@ -1707,8 +1710,8 @@ namespace EngineeringTools.UI
                 // Force UI update
                 this.UpdateLayout();
 
-                string excelPath = @"C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx";
-                bool isChecked = _mrpManager.CheckSalesOrder(salesOrder, excelPath);
+                // Use fast database lookup instead of slow Excel COM
+                bool isChecked = _mrpManager.CheckSalesOrderInDatabase(salesOrder);
 
                 if (isChecked)
                 {
@@ -1752,10 +1755,10 @@ namespace EngineeringTools.UI
                     return;
                 }
 
-                string excelPath = @"C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx";
+                // Use fast database operations instead of slow Excel COM
                 
                 // Check if it already exists
-                if (_mrpManager.CheckSalesOrder(salesOrder, excelPath))
+                if (_mrpManager.CheckSalesOrderInDatabase(salesOrder))
                 {
                     statusTextBlock.Text = $"Sales Order {salesOrder} is already checked";
                     statusTextBlock.Foreground = System.Windows.Media.Brushes.Blue;
@@ -1763,7 +1766,7 @@ namespace EngineeringTools.UI
                 }
 
                 // Add to checked list
-                bool success = _mrpManager.AddSalesOrderCheck(salesOrder, excelPath);
+                bool success = _mrpManager.AddSalesOrderToDatabase(salesOrder);
                 
                 if (success)
                 {
@@ -1876,7 +1879,7 @@ namespace EngineeringTools.UI
                     
                     try
                     {
-                        var checkedOrders = _mrpManager.GetCheckedSalesOrders(excelPath);
+                        var checkedOrders = _mrpManager.GetCheckedSalesOrdersFromDatabase();
                         if (checkedOrderCountTextBlock != null)
                         {
                             checkedOrderCountTextBlock.Text = checkedOrders.Count.ToString();
@@ -1963,8 +1966,8 @@ namespace EngineeringTools.UI
                 // Force UI update
                 this.UpdateLayout();
 
-                string excelPath = @"C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx";
-                bool isProgrammed = _mrpManager.CheckPartProgrammed(partNumber, excelPath);
+                // Use fast database lookup instead of slow Excel COM
+                bool isProgrammed = _mrpManager.CheckPartProgrammedInDatabase(partNumber);
 
                 if (isProgrammed)
                 {
@@ -2008,33 +2011,25 @@ namespace EngineeringTools.UI
                     return;
                 }
 
-                string excelPath = @"C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx";
+                // Use fast database operations instead of slow Excel COM
                 
                 // Check if it's already programmed
-                if (_mrpManager.CheckPartProgrammed(partNumber, excelPath))
+                if (_mrpManager.CheckPartProgrammedInDatabase(partNumber))
                 {
                     statusTextBlock.Text = $"Part {partNumber} is already programmed";
                     statusTextBlock.Foreground = System.Windows.Media.Brushes.Blue;
                     return;
                 }
 
-                // Add to programmed list with default program count of 1
-                bool success = _mrpManager.AddPartProgram(partNumber, 1, excelPath);
+                // Add to programmed list
+                _mrpManager.AddProgrammedPartToDatabase(partNumber);
                 
-                if (success)
-                {
-                    statusTextBlock.Text = $"✓ Part {partNumber} has been marked as programmed";
-                    statusTextBlock.Foreground = System.Windows.Media.Brushes.Green;
-                    
-                    // Clear the textbox and refresh status
-                    programPartTextBox.Clear();
-                    UpdateProgramStatus();
-                }
-                else
-                {
-                    statusTextBlock.Text = $"Failed to mark Part {partNumber} as programmed";
-                    statusTextBlock.Foreground = System.Windows.Media.Brushes.Red;
-                }
+                statusTextBlock.Text = $"✓ Part {partNumber} has been marked as programmed";
+                statusTextBlock.Foreground = System.Windows.Media.Brushes.Green;
+                
+                // Clear the textbox and refresh status
+                programPartTextBox.Clear();
+                UpdateProgramStatus();
             }
             catch (Exception ex)
             {
@@ -2072,8 +2067,6 @@ namespace EngineeringTools.UI
                 // Force UI update
                 this.UpdateLayout();
 
-                string excelPath = @"C:\Scripts\EngineeringTools\EngineeringDatabase.xlsx";
-                
                 // Get parts for this job from the database
                 var jobParts = GetJobPartNumbers(jobNumber);
                 
@@ -2084,9 +2077,8 @@ namespace EngineeringTools.UI
                     return;
                 }
                 
-                // Use batch method for better performance
-                var programmingResults = _mrpManager.CheckPartProgrammedBatch(jobParts, excelPath);
-                var missingPrograms = jobParts.Where(part => !programmingResults.GetValueOrDefault(part, false)).ToList();
+                // Use fast database method instead of slow Excel COM
+                var missingPrograms = _mrpManager.GetMissingProgramsFromDatabase(jobParts);
                 
                 MissingProgramData.Clear();
                 
@@ -2247,7 +2239,7 @@ namespace EngineeringTools.UI
                     
                     try
                     {
-                        var programmedParts = _mrpManager.GetProgrammedParts(excelPath);
+                        var programmedParts = _mrpManager.GetProgrammedPartsFromDatabase();
                         File.AppendAllText(debugFile, $"GetProgrammedParts succeeded, count: {programmedParts.Count}\n");
                         
                         if (programExcelStatus != null && programmedPartCount != null)
