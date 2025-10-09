@@ -20,14 +20,15 @@ namespace EngineeringTools.UI
             // Call base startup to initialize WPF application framework
             base.OnStartup(e);
             
-            // Simple direct startup - no loading window
+            // Show loading window and initialize application
             try
             {
-                var mainWindow = new MainWindow();
-                MainWindow = mainWindow;
-                mainWindow.Show();
-                mainWindow.Activate();
-                mainWindow.WindowState = WindowState.Normal;
+                _loadingWindow = new LoadingWindow();
+                _loadingWindow.Show();
+                _loadingWindow.UpdateProgress(0, "Starting Engineering Tools...", "Initializing application framework");
+                
+                // Initialize application with loading progress
+                InitializeApplicationSync();
             }
             catch (Exception ex)
             {
@@ -222,20 +223,20 @@ namespace EngineeringTools.UI
             // Import Excel data synchronously (with timeout protection)
             try
             {
-                _loadingWindow?.UpdateProgress(75, "Importing Excel data...", "Reading Priority List Master SHOP-SQL.xls");
+                _loadingWindow?.UpdateProgress(60, "Importing all data...", "Reading Priority List and Engineering Database");
                 
                 var task = System.Threading.Tasks.Task.Run(() => 
                 {
-                    mrpManager.ImportFromExcel(@"C:\Scripts\EngineeringTools\Priority List Master SHOP-SQL.xls");
+                    mrpManager.ImportRealData(); // Import all data: Priority List, Sales Orders, Press Programs, and Material Table
                 });
                 
-                if (task.Wait(30000)) // 30 second timeout
+                if (task.Wait(60000)) // 60 second timeout for full import
                 {
-                    _loadingWindow?.UpdateProgress(90, "Excel data imported successfully", "Finalizing startup");
+                    _loadingWindow?.UpdateProgress(90, "All data imported successfully", "Finalizing startup");
                 }
                 else
                 {
-                    _loadingWindow?.UpdateProgress(90, "Excel data timeout - using existing data", "Finalizing startup");
+                    _loadingWindow?.UpdateProgress(90, "Data import timeout - using existing data", "Finalizing startup");
                 }
             }
             catch (Exception)

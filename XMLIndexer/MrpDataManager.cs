@@ -10,6 +10,11 @@ namespace XMLIndexer
     {
         private readonly string _connectionString;
         
+        /// <summary>
+        /// Public access to connection string for other components
+        /// </summary>
+        public string ConnectionString => _connectionString;
+        
         public MrpDataManager(string databasePath)
         {
             _connectionString = $"Data Source={databasePath}";
@@ -505,11 +510,22 @@ namespace XMLIndexer
             var items = new List<MrpItem>();
             try
             {
+                // Log to debug file
+                File.AppendAllText("cutlist_debug.txt", $"[{DateTime.Now:HH:mm:ss}] Starting Excel import from: {excelPath}\n");
+                
                 dynamic excelApp = Activator.CreateInstance(Type.GetTypeFromProgID("Excel.Application"));
                 excelApp.Visible = false;
                 excelApp.DisplayAlerts = false;
 
                 var workbookObj = excelApp.Workbooks.Open(excelPath);
+                
+                // Log all worksheet names
+                File.AppendAllText("cutlist_debug.txt", $"[{DateTime.Now:HH:mm:ss}] Worksheets found:\n");
+                for (int ws = 1; ws <= workbookObj.Worksheets.Count; ws++)
+                {
+                    string wsName = workbookObj.Worksheets[ws].Name;
+                    File.AppendAllText("cutlist_debug.txt", $"  - {wsName}\n");
+                }
                 
                 // Find the "Priority List" worksheet
                 var worksheetObj = workbookObj.Worksheets["Priority List"];
@@ -517,6 +533,7 @@ namespace XMLIndexer
                 int totalRows = usedRangeObj.Rows.Count;
                 var processedJobs = new HashSet<string>(); // Track unique job numbers to avoid duplicates
                 
+                File.AppendAllText("cutlist_debug.txt", $"[{DateTime.Now:HH:mm:ss}] Priority List sheet - Total rows: {totalRows}\n");
                 Console.WriteLine($"Processing {totalRows} rows from Priority List worksheet...");
                 Console.WriteLine("Filtering for unique jobs (removing routing duplicates)...");
 
@@ -1476,21 +1493,115 @@ namespace XMLIndexer
         }
 
         /// <summary>
+        /// Get all MRP data from database
+        /// </summary>
+        public List<MrpItem> GetAllMrpDataFromDatabase()
+        {
+            var items = new List<MrpItem>();
+            
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                connection.Open();
+                
+                using var command = new SqliteCommand(@"
+                    SELECT m.*
+                    FROM MrpPriorityList m
+                    ORDER BY m.Priority ASC, m.JobNumber ASC", connection);
+                    
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    items.Add(new MrpItem
+                    {
+                        ID = reader.GetInt32("ID"),
+                        JobNumber = reader.GetString("JobNumber"),
+                        PartNumber = reader.IsDBNull("PartNumber") ? "" : reader.GetString("PartNumber"),
+                        Revision = reader.IsDBNull("Revision") ? "" : reader.GetString("Revision"),
+                        Quantity = reader.IsDBNull("Quantity") ? 1 : reader.GetInt32("Quantity"),
+                        Description = reader.IsDBNull("Description") ? "" : reader.GetString("Description"),
+                        Priority = reader.IsDBNull("Priority") ? 1 : reader.GetInt32("Priority"),
+                        DueDate = reader.IsDBNull("DueDate") ? "" : reader.GetString("DueDate"),
+                        Status = reader.IsDBNull("Status") ? "" : reader.GetString("Status"),
+                        Customer = reader.IsDBNull("Customer") ? "" : reader.GetString("Customer"),
+                        Program = reader.IsDBNull("Program") ? "" : reader.GetString("Program"),
+                        Notes = reader.IsDBNull("Notes") ? "" : reader.GetString("Notes"),
+                        LastUpdated = reader.IsDBNull("LastUpdated") ? DateTime.Now : reader.GetDateTime("LastUpdated"),
+                        XmlStatus = "No XML", // Default status
+                        HighestRelease = 0,
+                        ComponentCount = 0
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error but return empty list
+                Console.WriteLine($"Error getting MRP data from database: {ex.Message}");
+            }
+            
+            return items;
+        }
+
+        /// <summary>
+        /// Get database statistics
+        /// </summary>
+        public (int mrpCount, int salesOrderCount, int programmedPartCount) GetDatabaseCounts()
+        {
+            int mrpCount = 0, salesOrderCount = 0, programmedPartCount = 0;
+            
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                connection.Open();
+                
+                // Get MRP count
+                using var mrpCommand = new SqliteCommand("SELECT COUNT(*) FROM MrpPriorityList", connection);
+                mrpCount = Convert.ToInt32(mrpCommand.ExecuteScalar());
+                
+                // Get Sales Order count
+                using var soCommand = new SqliteCommand("SELECT COUNT(*) FROM SalesOrders", connection);
+                salesOrderCount = Convert.ToInt32(soCommand.ExecuteScalar());
+                
+                // Get Programmed Parts count
+                using var ppCommand = new SqliteCommand("SELECT COUNT(*) FROM ProgrammedParts", connection);
+                programmedPartCount = Convert.ToInt32(ppCommand.ExecuteScalar());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting database counts: {ex.Message}");
+            }
+            
+            return (mrpCount, salesOrderCount, programmedPartCount);
+        }
+
+        /// <summary>
         /// Import real data from Excel files - one time operation
         /// </summary>
         public void ImportRealData()
         {
             try
             {
-                // Clear existing data first
+                // ONE-TIME import only - preserve all existing user data
                 using var connection = new SqliteConnection(_connectionString);
                 connection.Open();
                 
-                using var command1 = new SqliteCommand("DELETE FROM SalesOrders", connection);
-                command1.ExecuteNonQuery();
+                // Check if SalesOrders already has data (one-time import only)
+                using var salesOrderCountCmd = new SqliteCommand("SELECT COUNT(*) FROM SalesOrders", connection);
+                var existingSalesOrders = Convert.ToInt32(salesOrderCountCmd.ExecuteScalar());
+                bool skipSalesOrderImport = existingSalesOrders > 0;
                 
-                using var command2 = new SqliteCommand("DELETE FROM ProgrammedParts", connection);
-                command2.ExecuteNonQuery();
+                // Check if ProgrammedParts already has data (one-time import only)
+                using var programmedPartsCountCmd = new SqliteCommand("SELECT COUNT(*) FROM ProgrammedParts", connection);
+                var existingProgrammedParts = Convert.ToInt32(programmedPartsCountCmd.ExecuteScalar());
+                bool skipProgrammedPartsImport = existingProgrammedParts > 0;
+                
+                if (skipSalesOrderImport)
+                {
+                    Console.WriteLine($"SalesOrders already has {existingSalesOrders} entries - skipping import to preserve existing data");
+                }
+                
+                // NOTE: NOT clearing ProgrammedParts table - it contains user-added data
+                // NOTE: NOT clearing SalesOrders table - one-time import only
 
                 // Import from Priority List Master SHOP-SQL.xls (use absolute path)
                 var priorityListPath = @"c:\Scripts\EngineeringTools\Priority List Master SHOP-SQL.xls";
@@ -1505,9 +1616,40 @@ namespace XMLIndexer
                     Console.WriteLine("Priority List Master SHOP-SQL.xls not found!");
                 }
 
-                // DISABLED: EngineeringDatabase.xlsx contains stale data
-                // Only using current Priority List Master SHOP-SQL.xls now
-                Console.WriteLine("Skipping EngineeringDatabase.xlsx - using only current Priority List data");
+                // Import sales orders and press programs from EngineeringDatabase.xlsx
+                var engineeringDbPath = @"c:\Scripts\EngineeringTools\EngineeringDatabase.xlsx";
+                Console.WriteLine($"Looking for EngineeringDatabase at: {engineeringDbPath}");
+                if (File.Exists(engineeringDbPath))
+                {
+                    if (!skipSalesOrderImport)
+                    {
+                        Console.WriteLine("Importing sales orders from EngineeringDatabase.xlsx (one-time import)");
+                        ImportFromSingleExcelFile(engineeringDbPath, "Checked Sales Orders");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Skipping sales orders import - data already exists");
+                    }
+                    
+                    if (!skipProgrammedPartsImport)
+                    {
+                        Console.WriteLine("Importing press programs from EngineeringDatabase.xlsx (one-time import)");
+                        ImportFromSingleExcelFile(engineeringDbPath, "Press programs");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Skipping press programs import - data already exists");
+                    }
+                    
+                    Console.WriteLine("Importing material table from EngineeringDatabase.xlsx (one-time import)");
+                    ImportMaterialTableData(engineeringDbPath);
+                }
+                else
+                {
+                    Console.WriteLine("EngineeringDatabase.xlsx not found!");
+                }
+
+                // NOTE: ProgrammedParts data is preserved and maintained by user actions in the application
             }
             catch (Exception ex)
             {
@@ -1672,42 +1814,62 @@ namespace XMLIndexer
         private void ImportSalesOrderData(dynamic worksheet, int salesOrderCol, int lastRow, SqliteConnection connection)
         {
             var salesOrders = new HashSet<string>();
-
+            int insertedCount = 0;
             for (int row = 2; row <= lastRow; row++)
             {
-                string salesOrder = worksheet.Cells[row, salesOrderCol].Value2?.ToString()?.Trim() ?? "";
+                string salesOrder = "";
+                try {
+                    salesOrder = worksheet.Cells[row, salesOrderCol].Value2?.ToString()?.Trim() ?? "";
+                } catch (Exception ex) {
+                    Console.WriteLine($"Error reading sales order at row {row}: {ex.Message}");
+                    continue;
+                }
                 if (!string.IsNullOrEmpty(salesOrder) && !salesOrders.Contains(salesOrder))
                 {
                     salesOrders.Add(salesOrder);
-                    using var cmd = new SqliteCommand("INSERT OR IGNORE INTO SalesOrders (SalesOrder) VALUES (@salesOrder)", connection);
-                    cmd.Parameters.AddWithValue("@salesOrder", salesOrder);
-                    cmd.ExecuteNonQuery();
+                    try {
+                        using var cmd = new SqliteCommand("INSERT OR IGNORE INTO SalesOrders (SalesOrder) VALUES (@salesOrder)", connection);
+                        cmd.Parameters.AddWithValue("@salesOrder", salesOrder);
+                        int result = cmd.ExecuteNonQuery();
+                        if (result > 0) insertedCount++;
+                    } catch (Exception ex) {
+                        Console.WriteLine($"Error inserting sales order '{salesOrder}': {ex.Message}");
+                    }
                 }
             }
-
-            Console.WriteLine($"Imported {salesOrders.Count} sales orders");
+            Console.WriteLine($"Imported {salesOrders.Count} unique sales orders, {insertedCount} new rows");
         }
 
         private void ImportProgrammedPartsData(dynamic worksheet, int partNumberCol, int programCol, int lastRow, SqliteConnection connection)
         {
             var programmedParts = new HashSet<string>();
-
+            int insertedCount = 0;
             for (int row = 2; row <= lastRow; row++)
             {
-                string partNumber = worksheet.Cells[row, partNumberCol].Value2?.ToString()?.Trim() ?? "";
-                string program = worksheet.Cells[row, programCol].Value2?.ToString()?.Trim() ?? "";
-
+                string partNumber = "";
+                string program = "";
+                try {
+                    partNumber = worksheet.Cells[row, partNumberCol].Value2?.ToString()?.Trim() ?? "";
+                    program = worksheet.Cells[row, programCol].Value2?.ToString()?.Trim() ?? "";
+                } catch (Exception ex) {
+                    Console.WriteLine($"Error reading programmed part at row {row}: {ex.Message}");
+                    continue;
+                }
                 if (!string.IsNullOrEmpty(partNumber) && !string.IsNullOrEmpty(program) &&
                     !programmedParts.Contains(partNumber))
                 {
                     programmedParts.Add(partNumber);
-                    using var cmd = new SqliteCommand("INSERT OR IGNORE INTO ProgrammedParts (PartNumber) VALUES (@partNumber)", connection);
-                    cmd.Parameters.AddWithValue("@partNumber", partNumber);
-                    cmd.ExecuteNonQuery();
+                    try {
+                        using var cmd = new SqliteCommand("INSERT OR IGNORE INTO ProgrammedParts (PartNumber) VALUES (@partNumber)", connection);
+                        cmd.Parameters.AddWithValue("@partNumber", partNumber);
+                        int result = cmd.ExecuteNonQuery();
+                        if (result > 0) insertedCount++;
+                    } catch (Exception ex) {
+                        Console.WriteLine($"Error inserting programmed part '{partNumber}': {ex.Message}");
+                    }
                 }
             }
-
-            Console.WriteLine($"Imported {programmedParts.Count} programmed parts");
+            Console.WriteLine($"Imported {programmedParts.Count} unique programmed parts, {insertedCount} new rows");
         }
 
         private void ImportProgrammedPartsFromPressSheet(dynamic worksheet, int partNumberCol, int lastRow, SqliteConnection connection)
@@ -1730,5 +1892,362 @@ namespace XMLIndexer
 
             Console.WriteLine($"Imported {programmedParts.Count} programmed parts from Press programs sheet");
         }
+
+        /// <summary>
+        /// Import material table data from EngineeringDatabase.xlsx
+        /// </summary>
+        private void ImportMaterialTableData(string filePath)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            // Create MaterialTable if it doesn't exist
+            using var createCmd = new SqliteCommand(@"
+                CREATE TABLE IF NOT EXISTS MaterialTable (
+                    ID INTEGER PRIMARY KEY,
+                    MaterialPartNo TEXT,
+                    BysoftMaterialCode TEXT,
+                    SolidWorksMaterialCode TEXT,
+                    Thickness REAL,
+                    Gauge TEXT,
+                    ScrapFactor REAL,
+                    Pounds REAL,
+                    SheetMajor TEXT,
+                    SheetMinor TEXT
+                )", connection);
+            createCmd.ExecuteNonQuery();
+
+            // Only import if MaterialTable is empty (one-time import only)
+            using var countCmd = new SqliteCommand("SELECT COUNT(*) FROM MaterialTable", connection);
+            var existingCount = Convert.ToInt32(countCmd.ExecuteScalar());
+            
+            if (existingCount > 0)
+            {
+                Console.WriteLine($"MaterialTable already has {existingCount} entries - skipping import to preserve existing data");
+                return;
+            }
+
+            Type? excelType = Type.GetTypeFromProgID("Excel.Application");
+            if (excelType == null)
+            {
+                Console.WriteLine("Excel is not installed on this system");
+                return;
+            }
+
+            dynamic excelApp = Activator.CreateInstance(excelType);
+            excelApp.Visible = false;
+
+            try
+            {
+                dynamic workbook = excelApp.Workbooks.Open(filePath);
+                
+                // Look for MaterialTable sheet (adjust sheet name/number as needed)
+                dynamic worksheet = null;
+                for (int i = 1; i <= workbook.Worksheets.Count; i++)
+                {
+                    dynamic sheet = workbook.Worksheets[i];
+                    string sheetName = sheet.Name;
+                    Console.WriteLine($"Found sheet: {sheetName}");
+                    
+                    if (sheetName.Contains("Material", StringComparison.OrdinalIgnoreCase))
+                    {
+                        worksheet = sheet;
+                        Console.WriteLine($"Using MaterialTable sheet: {sheetName}");
+                        break;
+                    }
+                }
+
+                if (worksheet == null)
+                {
+                    Console.WriteLine("MaterialTable sheet not found");
+                    return;
+                }
+
+                // Read data starting from row 2 (assuming row 1 has headers)
+                int row = 2;
+                int importedCount = 0;
+
+                while (true)
+                {
+                    dynamic idCell = worksheet.Cells[row, 1];
+                    if (idCell.Value == null) break;
+
+                    try
+                    {
+                        var id = Convert.ToInt32(idCell.Value);
+                        var materialPartNo = worksheet.Cells[row, 2].Value?.ToString() ?? "";
+                        var bysoftCode = worksheet.Cells[row, 3].Value?.ToString() ?? "";
+                        var solidWorksCode = worksheet.Cells[row, 4].Value?.ToString() ?? "";
+                        var thickness = Convert.ToDouble(worksheet.Cells[row, 5].Value ?? 0.0);
+                        var gauge = worksheet.Cells[row, 6].Value?.ToString() ?? "";
+                        var scrapFactor = Convert.ToDouble(worksheet.Cells[row, 7].Value ?? 1.0);
+                        var pounds = Convert.ToDouble(worksheet.Cells[row, 8].Value ?? 0.0);
+                        var sheetMajor = worksheet.Cells[row, 9].Value?.ToString() ?? "";
+                        var sheetMinor = worksheet.Cells[row, 10].Value?.ToString() ?? "";
+
+                        using var cmd = new SqliteCommand(@"
+                            INSERT INTO MaterialTable 
+                            (ID, MaterialPartNo, BysoftMaterialCode, SolidWorksMaterialCode, 
+                             Thickness, Gauge, ScrapFactor, Pounds, SheetMajor, SheetMinor) 
+                            VALUES (@id, @partNo, @bysoftCode, @solidWorksCode, 
+                                    @thickness, @gauge, @scrapFactor, @pounds, @sheetMajor, @sheetMinor)", 
+                            connection);
+
+                        cmd.Parameters.AddWithValue("@id", id);
+                        cmd.Parameters.AddWithValue("@partNo", materialPartNo);
+                        cmd.Parameters.AddWithValue("@bysoftCode", bysoftCode);
+                        cmd.Parameters.AddWithValue("@solidWorksCode", solidWorksCode);
+                        cmd.Parameters.AddWithValue("@thickness", thickness);
+                        cmd.Parameters.AddWithValue("@gauge", gauge);
+                        cmd.Parameters.AddWithValue("@scrapFactor", scrapFactor);
+                        cmd.Parameters.AddWithValue("@pounds", pounds);
+                        cmd.Parameters.AddWithValue("@sheetMajor", sheetMajor);
+                        cmd.Parameters.AddWithValue("@sheetMinor", sheetMinor);
+
+                        cmd.ExecuteNonQuery();
+                        importedCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error importing material row {row}: {ex.Message}");
+                    }
+
+                    row++;
+                }
+
+                Console.WriteLine($"Imported {importedCount} material specifications");
+            }
+            finally
+            {
+                excelApp.Quit();
+            }
+        }
+        
+        /// <summary>
+        /// Get material information for a part from MaterialTable
+        /// </summary>
+        public string GetMaterialInfo(string partNumber)
+        {
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                connection.Open();
+                
+                using var command = new SqliteCommand(@"
+                    SELECT Material 
+                    FROM MaterialTable 
+                    WHERE PartNumber LIKE @partNumber 
+                    LIMIT 1", connection);
+                
+                command.Parameters.AddWithValue("@partNumber", $"%{partNumber}%");
+                
+                var result = command.ExecuteScalar();
+                return result?.ToString() ?? "";
+            }
+            catch
+            {
+                return "";
+            }
+        }
+        
+        /// <summary>
+        /// Get thickness for a part from MaterialTable
+        /// </summary>
+        public double GetThickness(string partNumber)
+        {
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                connection.Open();
+                
+                using var command = new SqliteCommand(@"
+                    SELECT Thickness 
+                    FROM MaterialTable 
+                    WHERE PartNumber LIKE @partNumber 
+                    LIMIT 1", connection);
+                
+                command.Parameters.AddWithValue("@partNumber", $"%{partNumber}%");
+                
+                var result = command.ExecuteScalar();
+                if (result != null && double.TryParse(result.ToString(), out double thickness))
+                {
+                    return thickness;
+                }
+                return 0.0;
+            }
+            catch
+            {
+                return 0.0;
+            }
+        }
+    
+        private List<FileSystemWatcher> _xmlWatchers = new List<FileSystemWatcher>();
+        
+        /// <summary>
+        /// Start monitoring XML directories for new files and automatically index them
+        /// </summary>
+        public void StartXmlFileMonitoring()
+        {
+            var xmlPaths = new string[] {
+                @"\\kmi-solidworks22\solidworks22common\CUT LIST XML",
+                @"\\kmi-solidworks22\solidworks22common\CUT LIST XML\Legacy",
+                @"\\kmi-solidworks22\solidworks22common\CUT LIST XML\New"
+            };
+            
+            foreach (var path in xmlPaths)
+            {
+                try
+                {
+                    if (Directory.Exists(path))
+                    {
+                        var watcher = new FileSystemWatcher(path)
+                        {
+                            Filter = "*.xml",
+                            IncludeSubdirectories = true,
+                            EnableRaisingEvents = true
+                        };
+                        
+                        watcher.Created += OnXmlFileCreated;
+                        watcher.Changed += OnXmlFileChanged;
+                        _xmlWatchers.Add(watcher);
+                        
+                        Console.WriteLine($"Started monitoring XML directory: {path}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to monitor {path}: {ex.Message}");
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Stop XML file monitoring
+        /// </summary>
+        public void StopXmlFileMonitoring()
+        {
+            foreach (var watcher in _xmlWatchers)
+            {
+                watcher.EnableRaisingEvents = false;
+                watcher.Dispose();
+            }
+            _xmlWatchers.Clear();
+        }
+        
+        private void OnXmlFileCreated(object sender, FileSystemEventArgs e)
+        {
+            try
+            {
+                // Wait a moment for file to be fully written
+                System.Threading.Thread.Sleep(1000);
+                IndexNewXmlFile(e.FullPath);
+                Console.WriteLine($"Auto-indexed new XML file: {e.Name}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to auto-index {e.Name}: {ex.Message}");
+            }
+        }
+        
+        private void OnXmlFileChanged(object sender, FileSystemEventArgs e)
+        {
+            try
+            {
+                // Wait a moment for file to be fully written
+                System.Threading.Thread.Sleep(1000);
+                IndexNewXmlFile(e.FullPath);
+                Console.WriteLine($"Re-indexed modified XML file: {e.Name}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to re-index {e.Name}: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Index a single XML file into the database
+        /// </summary>
+        private void IndexNewXmlFile(string filePath)
+        {
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                connection.Open();
+                
+                var fileInfo = new FileInfo(filePath);
+                var fileName = Path.GetFileNameWithoutExtension(fileInfo.Name);
+                
+                // Check if file already exists in database
+                using var checkCommand = new SqliteCommand(@"
+                    SELECT COUNT(*) FROM XMLFiles WHERE FilePath = @filePath", connection);
+                checkCommand.Parameters.AddWithValue("@filePath", filePath);
+                
+                var exists = Convert.ToInt32(checkCommand.ExecuteScalar()) > 0;
+                
+                if (!exists)
+                {
+                    // Add new file to XMLFiles table
+                    using var insertCommand = new SqliteCommand(@"
+                        INSERT INTO XMLFiles (FileName, FilePath, LastModified, ProcessedDate)
+                        VALUES (@fileName, @filePath, @lastModified, @processedDate)", connection);
+                    
+                    insertCommand.Parameters.AddWithValue("@fileName", fileName);
+                    insertCommand.Parameters.AddWithValue("@filePath", filePath);
+                    insertCommand.Parameters.AddWithValue("@lastModified", fileInfo.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                    insertCommand.Parameters.AddWithValue("@processedDate", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    
+                    insertCommand.ExecuteNonQuery();
+                    
+                    // Parse and add components from the XML file
+                    ParseAndIndexXmlComponents(filePath, fileName, connection);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error indexing XML file {filePath}: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Parse XML file and add components to database
+        /// </summary>
+        private void ParseAndIndexXmlComponents(string filePath, string jobNumber, SqliteConnection connection)
+        {
+            try
+            {
+                var xmlDoc = new System.Xml.XmlDocument();
+                xmlDoc.Load(filePath);
+                
+                var components = xmlDoc.SelectNodes("//Component");
+                
+                foreach (System.Xml.XmlNode component in components)
+                {
+                    var name = component.SelectSingleNode("Name")?.InnerText ?? "";
+                    var quantity = component.SelectSingleNode("Quantity")?.InnerText ?? "1";
+                    var material = component.SelectSingleNode("Material")?.InnerText ?? "";
+                    var thickness = component.SelectSingleNode("Thickness")?.InnerText ?? "";
+                    
+                    // Insert component into Components table
+                    using var componentCommand = new SqliteCommand(@"
+                        INSERT OR REPLACE INTO Components 
+                        (JobNumber, ComponentName, Quantity, Material, Thickness, XmlFilePath)
+                        VALUES (@jobNumber, @name, @quantity, @material, @thickness, @filePath)", connection);
+                    
+                    componentCommand.Parameters.AddWithValue("@jobNumber", jobNumber);
+                    componentCommand.Parameters.AddWithValue("@name", name);
+                    componentCommand.Parameters.AddWithValue("@quantity", quantity);
+                    componentCommand.Parameters.AddWithValue("@material", material);
+                    componentCommand.Parameters.AddWithValue("@thickness", thickness);
+                    componentCommand.Parameters.AddWithValue("@filePath", filePath);
+                    
+                    componentCommand.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error parsing XML components from {filePath}: {ex.Message}");
+            }
+        }
+
     }
 }

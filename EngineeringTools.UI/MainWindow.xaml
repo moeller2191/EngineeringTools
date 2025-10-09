@@ -1,4 +1,4 @@
-﻿<Window x:Class="EngineeringTools.UI.MainWindow"
+<Window x:Class="EngineeringTools.UI.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -45,10 +45,10 @@
             <Button Content="New Job" Click="NewJob_Click" Padding="10,5" Margin="5"/>
             <Button Content="Load from Excel" Click="LoadFromExcel_Click" Padding="10,5" Margin="5" Background="LightGreen"/>
             <Button Content="Generate Cutlist" Click="GenerateCutlist_Click" Padding="10,5" Margin="5"/>
-            <Button Content="Create Burn List" Click="CreateBurnList_Click" Padding="10,5" Margin="5" Background="Orange"/>
             <Separator/>
             <Button Content="Browse Database" Click="BrowseDatabase_Click" Padding="10,5" Margin="5"/>
             <Button Content="Refresh" Click="Refresh_Click" Padding="10,5" Margin="5"/>
+            <Button Content="Scan XMLs" Click="ScanXmls_Click" Padding="10,5" Margin="5" Background="Orange" ToolTip="Scan for new XML files not yet in database"/>
         </ToolBar>
         
         <!-- Main Content Area -->
@@ -189,7 +189,8 @@
                             </DataGrid>
                         </TabItem>
                         <TabItem Header="XML Files">
-                            <DataGrid Name="XmlFilesDataGrid" AutoGenerateColumns="False" IsReadOnly="True">
+                            <DataGrid Name="XmlFilesDataGrid" AutoGenerateColumns="False" IsReadOnly="True" 
+                                     SelectionChanged="XmlFilesDataGrid_SelectionChanged">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Part Number" Binding="{Binding PartNumber}" Width="150"/>
                                     <DataGridTextColumn Header="Revision" Binding="{Binding Revision}" Width="80"/>
@@ -212,7 +213,6 @@
                         <RowDefinition Height="Auto"/>  <!-- Status Section -->
                         <RowDefinition Height="10"/>    <!-- Spacer -->
                         <RowDefinition Height="*"/>     <!-- Checked Orders List -->
-                        <RowDefinition Height="Auto"/>  <!-- Action Buttons -->
                     </Grid.RowDefinitions>
                     
                     <!-- Header -->
@@ -261,15 +261,7 @@
                         </StackPanel>
                     </GroupBox>
                     
-                    <!-- Action Buttons -->
-                    <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
-                        <Button Name="ExportCheckedOrdersButton" Content="Export to CSV" 
-                               Padding="10,5" Margin="5" Click="ExportCheckedOrders_Click" Background="LightCyan"/>
-                        <Button Name="ImportCheckedOrdersButton" Content="Import from CSV" 
-                               Padding="10,5" Margin="5" Click="ImportCheckedOrders_Click" Background="LightPink"/>
-                        <Button Name="ClearAllOrdersButton" Content="Clear All Orders" 
-                               Padding="10,5" Margin="5" Click="ClearAllOrders_Click" Background="LightCoral"/>
-                    </StackPanel>
+                    <!-- Action Buttons Removed per user request -->
                 </Grid>
             </TabItem>
             
@@ -282,7 +274,6 @@
                         <RowDefinition Height="Auto"/>  <!-- Status Section -->
                         <RowDefinition Height="10"/>    <!-- Spacer -->
                         <RowDefinition Height="*"/>     <!-- Missing Programs List -->
-                        <RowDefinition Height="Auto"/>  <!-- Action Buttons -->
                     </Grid.RowDefinitions>
                     
                     <!-- Header -->
@@ -374,14 +365,120 @@
                         </Grid>
                     </GroupBox>
                     
+                    <!-- Action Buttons Removed per user request -->
+                </Grid>
+            </TabItem>
+            
+            <!-- Burn List Tab -->
+            <TabItem Header="Burn List">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>  <!-- Header -->
+                        <RowDefinition Height="Auto"/>  <!-- Input Section -->
+                        <RowDefinition Height="Auto"/>  <!-- Options Section -->
+                        <RowDefinition Height="10"/>    <!-- Spacer -->
+                        <RowDefinition Height="*"/>     <!-- Job Numbers List/Results -->
+                        <RowDefinition Height="Auto"/>  <!-- Action Buttons -->
+                    </Grid.RowDefinitions>
+                    
+                    <!-- Header -->
+                    <TextBlock Grid.Row="0" Text="Burn List Generator" FontSize="16" FontWeight="Bold" 
+                              HorizontalAlignment="Center" Margin="0,0,0,15"/>
+                    
+                    <!-- Input Section -->
+                    <GroupBox Grid.Row="1" Header="Job Numbers Input" Margin="0,0,0,10">
+                        <Grid Margin="10">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="10"/>
+                                <RowDefinition Height="200"/>
+                                <RowDefinition Height="10"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Grid.Row="0" Text="Paste job numbers from Excel (one per line or comma-separated):" 
+                                      FontWeight="Bold" Margin="0,0,0,5"/>
+                            
+                            <TextBox Grid.Row="2" Name="JobNumbersTextBox" 
+                                    AcceptsReturn="True" 
+                                    AcceptsTab="False"
+                                    TextWrapping="Wrap" 
+                                    VerticalScrollBarVisibility="Auto"
+                                    HorizontalScrollBarVisibility="Auto"
+                                    Padding="5"
+                                    FontFamily="Consolas"
+                                    FontSize="11"
+                                    Background="LightYellow"
+                                    TextChanged="JobNumbersTextBox_TextChanged"/>
+                            
+                            <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Name="ClearJobNumbersButton" Content="Clear" 
+                                       Padding="8,4" Margin="0,0,5,0" Click="ClearJobNumbers_Click"/>
+                                <TextBlock Text="Auto-parsing on paste..." 
+                                          VerticalAlignment="Center" FontStyle="Italic" 
+                                          Foreground="Gray" Margin="0,0,10,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </GroupBox>
+                    
+                    <!-- Options Section -->
+                    <GroupBox Grid.Row="2" Header="Burn List Options" Margin="0,0,0,10">
+                        <StackPanel Orientation="Horizontal" Margin="10">
+                            <RadioButton Name="ErpFormatRadio" Content="ERP Format (.erp)" 
+                                        GroupName="BurnListFormat" IsChecked="True" 
+                                        Margin="0,0,20,0" VerticalAlignment="Center"/>
+                            <RadioButton Name="WolFormatRadio" Content="WOL Format (.wol)" 
+                                        GroupName="BurnListFormat" 
+                                        Margin="0,0,20,0" VerticalAlignment="Center"/>
+                            <CheckBox Name="AutoOpenLocationCheckBox" Content="Auto-open file location" 
+                                     IsChecked="True" VerticalAlignment="Center" Margin="20,0,0,0"/>
+                        </StackPanel>
+                    </GroupBox>
+                    
+                    <!-- Job Numbers List/Results -->
+                    <GroupBox Grid.Row="4" Header="Parsed Job Numbers">
+                        <Grid Margin="5">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            
+                            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,5">
+                                <TextBlock Name="JobCountTextBlock" Text="0 jobs parsed" 
+                                          VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,10,0"/>
+                                <TextBlock Name="ValidJobCountTextBlock" Text="(0 valid)" 
+                                          VerticalAlignment="Center" Foreground="Green" Margin="0,0,10,0"/>
+                                <TextBlock Name="InvalidJobCountTextBlock" Text="(0 invalid)" 
+                                          VerticalAlignment="Center" Foreground="Red"/>
+                            </StackPanel>
+                            
+                            <DataGrid Grid.Row="1" Name="BurnListJobsDataGrid" 
+                                     AutoGenerateColumns="False" CanUserAddRows="False" 
+                                     IsReadOnly="True" SelectionMode="Extended"
+                                     GridLinesVisibility="Horizontal" AlternatingRowBackground="LightGray">
+                                <DataGrid.Columns>
+                                    <DataGridCheckBoxColumn Header="Include" Binding="{Binding IsSelected}" Width="60"/>
+                                    <DataGridTextColumn Header="Job Number" Binding="{Binding JobNumber}" Width="100"/>
+                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="80"/>
+                                    <DataGridTextColumn Header="Part Count" Binding="{Binding PartCount}" Width="70"/>
+                                    <DataGridTextColumn Header="XML Status" Binding="{Binding XmlStatus}" Width="100"/>
+                                    <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </GroupBox>
+                    
                     <!-- Action Buttons -->
                     <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
-                        <Button Name="ExportMissingProgramsButton" Content="Export Missing Parts" 
-                               Padding="10,5" Margin="5" Click="ExportMissingPrograms_Click" Background="LightCyan"/>
-                        <Button Name="ImportProgrammedPartsButton" Content="Import Programmed Parts" 
-                               Padding="10,5" Margin="5" Click="ImportProgrammedParts_Click" Background="LightPink"/>
-                        <Button Name="GenerateProgramReportButton" Content="Generate Program Report" 
-                               Padding="10,5" Margin="5" Click="GenerateProgramReport_Click" Background="Lavender"/>
+                        <Button Name="SelectAllJobsButton" Content="Select All" 
+                               Padding="10,5" Margin="5" Click="SelectAllJobs_Click" Background="LightGreen"/>
+                        <Button Name="DeselectAllJobsButton" Content="Deselect All" 
+                               Padding="10,5" Margin="5" Click="DeselectAllJobs_Click" Background="LightCoral"/>
+                        <Button Name="GenerateBurnListButton" Content="Generate Burn List" 
+                               Padding="15,8" Margin="10,5,5,5" Click="GenerateBurnList_Click" 
+                               Background="Orange" FontWeight="Bold"/>
+                        <Button Name="PreviewBurnListButton" Content="Preview Jobs" 
+                               Padding="10,5" Margin="5" Click="PreviewBurnList_Click" Background="LightCyan"/>
                     </StackPanel>
                 </Grid>
             </TabItem>
@@ -398,3 +495,5 @@
         </StatusBar>
     </Grid>
 </Window>
+
+

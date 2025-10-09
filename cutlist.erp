@@ -1,0 +1,23 @@
+<ErpExchange>
+	<Orders>
+		<ErpOrder>
+			<ImportType>NewOrder</ImportType>
+			<OrderNumber>IK37L-0000</OrderNumber>
+			<StartDate>2025-10-16</StartDate>
+			<TargetDate>2025-10-16</TargetDate>
+			<ProductionStrategy>MaterialAdministrationOrder</ProductionStrategy>
+			<Automatic>True</Automatic>
+			<Parts>
+				<ErpPart>
+					<BysoftCode>L156394</BysoftCode>
+					<Debit>93</Debit>
+					<MaterialCode>A36 PLATE</MaterialCode>
+					<Measure>Inch</Measure>
+					<Thickness>0.375</Thickness>
+					<RotationAllowance>Angle90</RotationAllowance>
+					<FillPart>False</FillPart>
+				</ErpPart>
+			</Parts>
+		</ErpOrder>
+	</Orders>
+</ErpExchange>
